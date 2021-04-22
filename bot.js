@@ -16,7 +16,29 @@ client.on("message", function (message) {
         .setTitle('PARA EL PUTO')
         .setColor('RED')
         .setDescription(`Esta .l. para el puto ${args}!`)
-        .setImage('https://media.giphy.com/media/dIBzteMy7M5H6iy7CX/giphy.gif')
+        
+
+        var numRandom = Math.floor(Math.random() * 6) + 1;
+        switch (numRandom) {
+            case 1:
+                embed.setImage('https://media.giphy.com/media/dIBzteMy7M5H6iy7CX/giphy.gif')
+                break;
+            case 2:
+                embed.setImage('https://media.giphy.com/media/XHr6LfW6SmFa0/source.gif')
+                break;
+            case 3:
+                embed.setImage('https://media.giphy.com/media/3ofT5VKbcCMGMoHULm/source.mp4')
+                break;
+            case 4:
+                embed.setImage('https://media.giphy.com/media/VAYuDQ8ZFYTFC/source.gif')
+                break;
+            case 5:
+                embed.setImage('https://media.giphy.com/media/QGzPdYCcBbbZm/source.gif')
+                break;
+            case 6:
+                embed.setImage('https://media.giphy.com/media/7jtgsCQRfZKN2/source.gif')
+                break;
+        }
 
         message.reply(embed);
     } else if (command === "random") {
