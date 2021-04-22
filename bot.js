@@ -27,7 +27,7 @@ client.on("message", function (message) {
                 embed.setImage('https://media.giphy.com/media/XHr6LfW6SmFa0/source.gif')
                 break;
             case 3:
-                embed.setImage('https://media.giphy.com/media/3ofT5VKbcCMGMoHULm/source.mp4')
+                embed.setImage('https://media.giphy.com/media/lIjjwfxKNIhoY/source.gif')
                 break;
             case 4:
                 embed.setImage('https://media.giphy.com/media/VAYuDQ8ZFYTFC/source.gif')
