@@ -21,22 +21,22 @@ client.on("message", function (message) {
         var numRandom = Math.floor(Math.random() * 6) + 1;
         switch (numRandom) {
             case 1:
-                embed.setImage('https://media.giphy.com/media/dIBzteMy7M5H6iy7CX/giphy.gif')
+                embed.setImage('https://i.ibb.co/QnjTL6B/trash-finger.gif')
                 break;
             case 2:
-                embed.setImage('https://media.giphy.com/media/XHr6LfW6SmFa0/source.gif')
+                embed.setImage('https://i.ibb.co/NjWrVqY/infinite-finger.gif')
                 break;
             case 3:
-                embed.setImage('https://media.giphy.com/media/lIjjwfxKNIhoY/source.gif')
+                embed.setImage('https://i.ibb.co/wgp0r35/circles-finger.gif')
                 break;
             case 4:
-                embed.setImage('https://media.giphy.com/media/VAYuDQ8ZFYTFC/source.gif')
+                embed.setImage('https://i.ibb.co/DRtS3BS/camisa-finger.gif')
                 break;
             case 5:
-                embed.setImage('https://media.giphy.com/media/QGzPdYCcBbbZm/source.gif')
+                embed.setImage('https://i.ibb.co/n3vBqWZ/arrow-finger.gif')
                 break;
             case 6:
-                embed.setImage('https://media.giphy.com/media/7jtgsCQRfZKN2/source.gif')
+                embed.setImage('https://i.ibb.co/YTpbVN3/black-dancing.gif')
                 break;
         }
 
