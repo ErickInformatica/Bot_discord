@@ -36,7 +36,7 @@ client.on("message", function (message) {
                 embed.setImage('https://i.ibb.co/n3vBqWZ/arrow-finger.gif')
                 break;
             case 6:
-                embed.setImage('https://i.ibb.co/YTpbVN3/black-dancing.gif')
+                embed.setImage('https://i.ibb.co/mNy3rND/kid-finger.gif')
                 break;
         }
 
