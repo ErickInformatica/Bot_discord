@@ -15,7 +15,7 @@ client.on("message", function (message) {
         const embed = new Discord.MessageEmbed()
         .setTitle('PARA EL PUTO')
         .setColor('RED')
-        .setDescription(`Esta .l. para el puto ${args}!`)
+        .setDescription(`Esta .l. para el puto ${args.join(' ')}!`)
         
 
         var numRandom = Math.floor(Math.random() * 6) + 1;
@@ -54,6 +54,12 @@ client.on("message", function (message) {
                 message.reply(`Esta .l. para el puto @Kansas !`);
                 break;
         }
+    } else if(command === "picoteando") {
+        const embed = new Discord.MessageEmbed()
+        .setTitle('ME ESTA PICOTEANDO')
+        .setColor('AQUA')
+        .setDescription(`Vean banda me esta picoteando, ${args.join(' ')}! AHHH!! PUTO!! SUELTAME ALV!!`)
+        .setImage('https://i.ibb.co/ZV1zJBK/picando.jpg')
     }
 });
 
