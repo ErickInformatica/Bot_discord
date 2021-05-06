@@ -60,6 +60,8 @@ client.on("message", function (message) {
         .setColor('AQUA')
         .setDescription(`Vean banda me esta picoteando, ${args.join(' ')}! AHHH!! PUTO!! SUELTAME ALV!!`)
         .setImage('https://i.ibb.co/ZV1zJBK/picando.jpg')
+
+        message.reply(embed);
     }
 });
 
