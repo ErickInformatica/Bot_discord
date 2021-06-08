@@ -62,6 +62,13 @@ client.on("message", function (message) {
         .setImage('https://i.ibb.co/cJhDGyN/picoteando.gif')
 
         message.reply(embed);
+    } else if(command === "vaca"){
+        client.token = token;
+
+        const fetchUser = async id => client.users.fetch(id);
+        const channelName = "pedir-musica";
+        const channel = client.channels.cache.find(channel => channel.name === channelName)
+        channel.send('-p vaca')
     }
 });
 
