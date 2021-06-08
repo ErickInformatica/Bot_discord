@@ -63,7 +63,22 @@ client.on("message", function (message) {
         .setImage('https://i.ibb.co/cJhDGyN/picoteando.gif')
 
         message.reply(embed);
-    } else if(command === "vaca"){
+    } else if (command === "adiosito"){
+        var isReady = true;
+        if (isReady){
+            isReady = false;
+            var voiceChannel = message.member.voiceChannel;
+            voiceChannel.join().then(connection =>
+            {
+               const dispatcher = connection.playFile('./kevin-audio.m4a');
+               dispatcher.on("end", end => {
+                 voiceChannel.leave();
+                 });
+             }).catch(err => console.log(err));
+                         
+        }
+        isReady = true;
+    } else if(command === "enviar mensaje"){
         // client.token = tokenUser;
 
         // const fetchUser = async id => client.users.fetch(id);
