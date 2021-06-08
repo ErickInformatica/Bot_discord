@@ -65,6 +65,12 @@ client.on("message", function (message) {
 
         message.reply(embed);
     } else if (command === "adiosito"){
+        const embed = new Discord.MessageEmbed()
+        .setTitle('BESOS, BESITOS, BESOS')
+        .setColor('RED')
+        .setDescription(`VAMONOS ALV ${args.join(' ')}!`)
+        .setImage('https://i.ibb.co/LhHDhqG/Webp-net-gifmaker.gif')
+        message.reply(embed);
         var isReady = true;
         if (isReady){
             isReady = false;
