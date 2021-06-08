@@ -74,17 +74,20 @@ client.on("message", function (message) {
         var isReady = true;
         if (isReady){
             isReady = false;
-            var voiceChannel = message.member.voice;
-            voiceChannel.channel.join().then(connection =>
-            {
-               const dispatcher = connection.play(path.join(__dirname, 'kevin-audio.m4a'));
-               dispatcher.on("finish", end => {
-                 voiceChannel.channel.leave();
-                 });
-             }).catch(err => console.log(err));
-                         
-        }
-        isReady = true;
+            if(message.member.voice.channel){
+                var voiceChannel = message.member.voice;
+                voiceChannel.channel.join().then(connection =>
+                {
+                   const dispatcher = connection.play(path.join(__dirname, 'kevin-audio.m4a'));
+                   dispatcher.on("finish", end => {
+                     voiceChannel.channel.leave();
+                     });
+                 }).catch(err => console.log(err));
+                             
+            }
+            isReady = true;
+            }
+            
     } else if(command === "enviar mensaje"){
         // client.token = tokenUser;
 
