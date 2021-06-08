@@ -69,7 +69,7 @@ client.on("message", function (message) {
         // const fetchUser = async id => client.users.fetch(id);
         const channelName = "pedir-musica";
         const channel = client.channels.cache.find(channel => channel.name === channelName)
-        channel.send('-p vaca')
+        channel.send('/play vaca')
     }
 });
 
