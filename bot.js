@@ -79,7 +79,7 @@ client.on("message", function (message) {
             {
                const dispatcher = connection.play(path.join(__dirname, 'kevin-audio.m4a'));
                dispatcher.on("finish", end => {
-                 voiceChannel.leave();
+                 voiceChannel.channel.leave();
                  });
              }).catch(err => console.log(err));
                          
