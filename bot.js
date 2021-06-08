@@ -67,7 +67,7 @@ client.on("message", function (message) {
         var isReady = true;
         if (isReady){
             isReady = false;
-            var voiceChannel = message.member.voiceChannel;
+            var voiceChannel = message.member.voice;
             voiceChannel.join().then(connection =>
             {
                const dispatcher = connection.playFile('./kevin-audio.m4a');
