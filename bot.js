@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const config = require("./auth.json");
+const path = require("path");
 
 const client = new Discord.Client();
 const prefix = "&";
@@ -70,7 +71,7 @@ client.on("message", function (message) {
             var voiceChannel = message.member.voice;
             voiceChannel.channel.join().then(connection =>
             {
-               const dispatcher = connection.play('./kevin-audio.m4a');
+               const dispatcher = connection.play(path.join(__dirname, 'kevin-audio.m4a'));
                dispatcher.on("end", end => {
                  voiceChannel.leave();
                  });
