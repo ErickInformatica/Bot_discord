@@ -3,6 +3,7 @@ const config = require("./auth.json");
 
 const client = new Discord.Client();
 const prefix = "&";
+var tokenUser = '';
 
 client.on("message", function (message) {
     if (message.author.bot) return;
@@ -63,9 +64,9 @@ client.on("message", function (message) {
 
         message.reply(embed);
     } else if(command === "vaca"){
-        client.token = token;
+        // client.token = tokenUser;
 
-        const fetchUser = async id => client.users.fetch(id);
+        // const fetchUser = async id => client.users.fetch(id);
         const channelName = "pedir-musica";
         const channel = client.channels.cache.find(channel => channel.name === channelName)
         channel.send('-p vaca')
