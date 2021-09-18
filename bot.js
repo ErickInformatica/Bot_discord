@@ -72,6 +72,15 @@ client.on("message", function (message) {
                 break;
         }
     } else if(command === "picoteando") {
+        if(!message.member.voice.channel){
+            const embed = new Discord.MessageEmbed()
+            .setTitle('ME ESTA PICOTEANDO')
+            .setColor('AQUA')
+            .setDescription(`Vean banda me esta picoteando, ${args.join(' ')}! AHHH!! PUTO!! SUELTAME ALV!!`)
+            .setImage('https://i.ibb.co/cJhDGyN/picoteando.gif')
+    
+            message.reply(embed);
+        }
         const embed = new Discord.MessageEmbed()
         .setTitle('ME ESTA PICOTEANDO')
         .setColor('AQUA')
@@ -94,7 +103,7 @@ client.on("message", function (message) {
                              
             }
             isReady = true;
-            }
+        }
     } else if (command === "adiosito"){
         const embed = new Discord.MessageEmbed()
         .setTitle('BESOS, BESITOS, BESOS')
@@ -117,7 +126,7 @@ client.on("message", function (message) {
                              
             }
             isReady = true;
-            }
+        }
             
     } else if (command === "ñam"){
         const embed = new Discord.MessageEmbed()
