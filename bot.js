@@ -79,6 +79,22 @@ client.on("message", function (message) {
         .setImage('https://i.ibb.co/cJhDGyN/picoteando.gif')
 
         message.reply(embed);
+
+        if (isReady){
+            isReady = false;
+            if(message.member.voice.channel){
+                var voiceChannel = message.member.voice;
+                voiceChannel.channel.join().then(connection =>
+                {
+                   const dispatcher = connection.play(path.join(__dirname, 'me-esta-picando-banda.m4a'));
+                   dispatcher.on("finish", end => {
+                     voiceChannel.channel.leave();
+                     });
+                 }).catch(err => console.log(err));
+                             
+            }
+            isReady = true;
+            }
     } else if (command === "adiosito"){
         const embed = new Discord.MessageEmbed()
         .setTitle('BESOS, BESITOS, BESOS')
@@ -103,7 +119,7 @@ client.on("message", function (message) {
             isReady = true;
             }
             
-    } else if (command === "ñamñam"){
+    } else if (command === "ñam"){
         const embed = new Discord.MessageEmbed()
         .setTitle('A COMER PUERCAS!!!')
         .setColor('RED')
@@ -126,7 +142,7 @@ client.on("message", function (message) {
             }
             isReady = true;
         }
-    }else if (command === "yipyipyip"){
+    }else if (command === "yip"){
         const embed = new Discord.MessageEmbed()
         .setTitle('ASDFASGADSFKAJSDHFKJALSDFHASLDF')
         .setColor('RED')
