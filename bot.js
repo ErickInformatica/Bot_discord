@@ -79,7 +79,7 @@ client.on("message", function (message) {
         .setImage('https://i.ibb.co/cJhDGyN/picoteando.gif')
 
         message.reply(embed);
-
+        var isReady = true;
         if (isReady){
             isReady = false;
             if(message.member.voice.channel){
