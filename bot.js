@@ -88,6 +88,52 @@ client.on("message", function (message) {
             isReady = true;
             }
             
+    } else if (command === "ñamñam"){
+        const embed = new Discord.MessageEmbed()
+        .setTitle('A COMER PUERCAS!!!')
+        .setColor('RED')
+        .setDescription(`ÑAÑAÑAÑAÑAÑAÑAÑAÑAÑA`)
+        .setImage('https://i.ibb.co/zZkStgV/nanana.gif')
+        message.reply(embed);
+        var isReady = true;
+        if (isReady){
+            isReady = false;
+            if(message.member.voice.channel){
+                var voiceChannel = message.member.voice;
+                voiceChannel.channel.join().then(connection =>
+                {
+                   const dispatcher = connection.play(path.join(__dirname, 'calichin.m4a'));
+                   dispatcher.on("finish", end => {
+                     voiceChannel.channel.leave();
+                     });
+                 }).catch(err => console.log(err));
+                             
+            }
+            isReady = true;
+        }
+    }else if (command === "yipyipyip"){
+        const embed = new Discord.MessageEmbed()
+        .setTitle('ASDFASGADSFKAJSDHFKJALSDFHASLDF')
+        .setColor('RED')
+        .setDescription(`ASI COMO LO OYERON PUTOS`)
+        .setImage('https://i.ibb.co/n8Kknsb/nigel-thornberry-kid.gif')
+        message.reply(embed);
+        var isReady = true;
+        if (isReady){
+            isReady = false;
+            if(message.member.voice.channel){
+                var voiceChannel = message.member.voice;
+                voiceChannel.channel.join().then(connection =>
+                {
+                   const dispatcher = connection.play(path.join(__dirname, 'kansas.m4a'));
+                   dispatcher.on("finish", end => {
+                     voiceChannel.channel.leave();
+                     });
+                 }).catch(err => console.log(err));
+                             
+            }
+            isReady = true;
+        }
     } else if(command === "enviar mensaje"){
         // client.token = tokenUser;
 
