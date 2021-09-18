@@ -20,25 +20,40 @@ client.on("message", function (message) {
         .setDescription(`Esta .l. para el puto ${args.join(' ')}!`)
         
 
-        var numRandom = Math.floor(Math.random() * 6) + 1;
+        var numRandom = Math.floor(Math.random() * 11) + 1;
         switch (numRandom) {
             case 1:
                 embed.setImage('https://i.ibb.co/QnjTL6B/trash-finger.gif')
                 break;
             case 2:
-                embed.setImage('https://i.ibb.co/NjWrVqY/infinite-finger.gif')
+                embed.setImage('https://i.ibb.co/MGCn3J9/hat-finger.gif')
                 break;
             case 3:
-                embed.setImage('https://i.ibb.co/wgp0r35/circles-finger.gif')
+                embed.setImage('https://i.ibb.co/JQ90Rjv/hail-finger.gif')
                 break;
             case 4:
-                embed.setImage('https://i.ibb.co/DRtS3BS/camisa-finger.gif')
+                embed.setImage('https://i.ibb.co/zPLZrjj/pichu-finger.gif')
                 break;
             case 5:
-                embed.setImage('https://i.ibb.co/n3vBqWZ/arrow-finger.gif')
+                embed.setImage('https://i.ibb.co/r2bxg7J/window-finger.gif')
                 break;
             case 6:
                 embed.setImage('https://i.ibb.co/mNy3rND/kid-finger.gif')
+                break;
+            case 7:
+                embed.setImage('https://i.ibb.co/vX8sN44/girl-finger.gif')
+                break;
+            case 8:
+                embed.setImage('https://i.ibb.co/tQXqSLD/feet-finger.gif')
+                break;
+            case 9:
+                embed.setImage('https://i.ibb.co/mcv1Yr8/happykid-finger.gif')
+                break;
+            case 10:
+                embed.setImage('https://i.ibb.co/VxGq8p4/baby-finger.gif')
+                break;
+            case 11:
+                embed.setImage('https://i.ibb.co/HpFRvTX/horse-finger.gif')
                 break;
         }
 
