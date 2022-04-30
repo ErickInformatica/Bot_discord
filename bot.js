@@ -142,6 +142,29 @@ client.on("message", function (message) {
             }
             isReady = true;
         }
+    }else if (command === "kansas"){
+        const embed = new Discord.MessageEmbed()
+        .setTitle('SOY GAY SOY GAY Y NO TIENE NADA DE MALO')
+        .setColor([221, 51, 255])
+        .setDescription(`FORTINAITI`)
+        .setUrl('https://www.youtube.com/watch?v=h3Bcjy0l6Yw')
+        message.reply(embed);
+        var isReady = true;
+        if (isReady){
+            isReady = false;
+            if(message.member.voice.channel){
+                var voiceChannel = message.member.voice;
+                voiceChannel.channel.join().then(connection =>
+                {
+                   const dispatcher = connection.play(path.join(__dirname, 'soy-gay-y-no-tiene-nada-de-malo.m4a'));
+                   dispatcher.on("finish", end => {
+                     voiceChannel.channel.leave();
+                     });
+                 }).catch(err => console.log(err));
+                             
+            }
+            isReady = true;
+        }
     }else if (command === "yip"){
         const embed = new Discord.MessageEmbed()
         .setTitle('ASDFASGADSFKAJSDHFKJALSDFHASLDF')
