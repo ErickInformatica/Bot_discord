@@ -8,7 +8,7 @@ const client = new Discord.Client();
 const prefix = "&";
 var tokenUser = '';
 
-const commandCoolDown = (userId) => {
+const commandCoolDown = (userId, message) => {
     if (cooldowns.has(userId)) {
         const cooldown = cooldowns.get(userId);
 
@@ -107,7 +107,7 @@ client.on("message", function (message) {
                 break;
         }
     } else if(command === "picoteando") {
-        commandCoolDown(userId);
+        commandCoolDown(userId, message);
 
         const embed = new Discord.MessageEmbed()
         .setTitle('ME ESTA PICOTEANDO')
