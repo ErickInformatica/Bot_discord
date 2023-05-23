@@ -2,14 +2,49 @@ const Discord = require("discord.js");
 const config = require("./auth.json");
 const path = require("path");
 
+const cooldowns = new Discord.Collection();
+
 const client = new Discord.Client();
 const prefix = "&";
 var tokenUser = '';
+
+const commandCoolDown = (userId) => {
+    if (cooldowns.has(userId)) {
+        const cooldown = cooldowns.get(userId);
+
+        // Calculate the remaining time until the cooldown expires
+        const remainingTime = cooldown - Date.now();
+
+        // Check if the cooldown is still active
+        if (remainingTime > 0) {
+            // Cooldown is still active
+            return message.reply(`Espera ${Math.ceil(remainingTime / 1000)} sec, mamawuevo para usar el comando.`);
+        }
+    }
+
+    // Set the cooldown duration (in milliseconds)
+      const cooldownDuration = 5000; // 5 seconds
+
+      // Set the cooldown expiration time
+      const expirationTime = Date.now() + cooldownDuration;
+
+      // Add the cooldown information to the collection
+      cooldowns.set(userId, expirationTime);
+
+      // Your command logic goes here
+      message.reply('Command executed.');
+
+      // Remove the cooldown after the specified duration
+      setTimeout(() => {
+        cooldowns.delete(userId);
+      }, cooldownDuration);
+} 
 
 client.on("message", function (message) {
     if (message.author.bot) return;
     if (!message.content.startsWith(prefix)) return;
 
+    const userId = message.author.id;
     const commandBody = message.content.slice(prefix.length);
     const args = commandBody.split(' ');
     const command = args.shift().toLowerCase();
@@ -72,6 +107,8 @@ client.on("message", function (message) {
                 break;
         }
     } else if(command === "picoteando") {
+        commandCoolDown(userId);
+
         const embed = new Discord.MessageEmbed()
         .setTitle('ME ESTA PICOTEANDO')
         .setColor('AQUA')
