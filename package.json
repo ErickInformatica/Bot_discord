@@ -9,8 +9,7 @@
   "author": "Erick Bran",
   "license": "ISC",
   "dependencies": {
-    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
-    "discord.js": "^12.5.3",
+    "discord.js": "^14.11.0",
     "node-opus": "^0.3.3",
     "winston": "^3.3.3"
   }
