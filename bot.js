@@ -269,7 +269,192 @@ const commands = {
             player.stop();
             connection.destroy();
         });
-    } 
+    },
+    pozole: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('WORT WORT WORT')
+            .setColor('Aqua')
+            .setDescription(`WORT WORT WORT, POZOLE?`)
+            .setImage('https://i.ibb.co/MSCF5qH/pozole.png');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'pozole.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
+    barberia: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('PASO LA MUNI')
+            .setColor('Aqua')
+            .setDescription(`EN LA BARBERIAAAA!`)
+            .setImage('https://i.ibb.co/K6z9hxb/barberia.jpg');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'BARBERIA.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
+    compe: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('VA VEEEEER COMPEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
+            .setColor('Aqua')
+            .setDescription(`PERROS TRIPLE IJUEPUTAS!`)
+            .setImage('https://i.ibb.co/zXbVSdF/images-1.jpg');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'COMPE.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
+    chatarra: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('SE COMPRAAAAA LA CHATARRAAAAA')
+            .setColor('Aqua')
+            .setDescription(`SE COMPRAAAAA LA CHATARRAAAAA`)
+            .setImage('https://i.ibb.co/gmTfm8Q/kevin-sabrozo-removebg-preview.png');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'chatarra.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
+    mp: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('MP')
+            .setColor('Aqua')
+            .setDescription(`MANCOS PROMEDIO`)
+            .setImage('https://i.ibb.co/dcn0qmb/Imagen-de-Whats-App-2023-12-16-a-las-17-53-12-38ee33c7.jpg');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'MP.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    }
 };
 
 
@@ -280,7 +465,6 @@ client.on('messageCreate', async message => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    // Asegúrate de que los timestamps para el comando existen
     if (!cooldowns.has(command)) {
         cooldowns.set(command, new Collection());
     }
@@ -293,7 +477,7 @@ client.on('messageCreate', async message => {
     if (commands[command]) {
         commands[command](message, args);
     } else {
-        message.reply("Comando no reconocido.");
+        message.reply("NO SEA MULA, NO EXISTE.");
     }
 });
 
