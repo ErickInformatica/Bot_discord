@@ -460,7 +460,6 @@ const commands = {
 
 const COOLDOWN_DURATION = 5000;
 client.on('messageCreate', async message => {
-    console.log(message.content);
     if (message.author.bot || !message.content.startsWith('&')) return;
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
