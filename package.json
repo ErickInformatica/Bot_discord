@@ -9,8 +9,10 @@
   "author": "Erick Bran",
   "license": "ISC",
   "dependencies": {
-    "discord.js":"^12.5.3",
-    "node-opus": "^0.3.3",
-    "winston": "^3.3.3"
+    "discord.js": "^14.0.0",
+    "@discordjs/voice": "^0.9.0",
+    "winston": "^3.3.3",
+    "libsodium-wrappers": "^0.7.9",
+    "ffmpeg-static": "^4.4.0"
   }
 }
