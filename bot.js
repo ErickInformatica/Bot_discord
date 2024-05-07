@@ -454,6 +454,22 @@ const commands = {
             player.stop();
             connection.destroy();
         });
+    },
+    woosh: (message, args) => {
+        const embed = new EmbedBuilder()
+            .setTitle('WOOOOSHHH!! MAMAEGG')
+            .setColor('Red')
+            .setImage('https://i.ibb.co/pZrXNJX/woosh.jpg');
+
+        message.reply({ embeds: [embed] });
+    },
+    wooshnt: (message, args) => {
+        const embed = new EmbedBuilder()
+            .setTitle(`WOOOOSHHHN'T!! BITCH`)
+            .setColor('Red')
+            .setImage('https://i.ibb.co/cQCJc2D/wooshnt.png');
+
+        message.reply({ embeds: [embed] });
     }
 };
 
