@@ -291,7 +291,7 @@ const commands = {
         });
 
         const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'pozole.mp3'));
+        const resource = createAudioResource(path.join(__dirname, 'pozole-loudess.mp3'));
         
         player.play(resource);
         connection.subscribe(player);
