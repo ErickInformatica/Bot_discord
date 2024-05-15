@@ -307,6 +307,80 @@ const commands = {
             connection.destroy();
         });
     },
+    breach: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('LEEEEETSSS GOOOO!!')
+            .setColor('Aqua')
+            .setDescription(`LETS GO?`)
+            .setImage('https://i.ibb.co/pXS3DvF/image.png');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'Voicy_LETS GO.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
+    unmedico: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('AYUDAAAA UN MEDICOOOOOOOO')
+            .setColor('Aqua')
+            .setDescription(`REVIVA ZORRA XD`)
+            .setImage('https://i.ibb.co/pXS3DvF/image.png');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'SAGE.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
     barberia: (message, args) => {
         if (!message.member.voice.channel) {
             return message.reply('Necesitas estar en un canal de voz para usar este comando.');
