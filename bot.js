@@ -353,7 +353,7 @@ const commands = {
             .setTitle('AYUDAAAA UN MEDICOOOOOOOO')
             .setColor('Aqua')
             .setDescription(`REVIVA ZORRA XD`)
-            .setImage('https://i.ibb.co/yBVfNCm/image.png');
+            .setImage('https://i.ibb.co/ChmPC9V/edgar-sage.png');
         
         message.reply({ embeds: [embed] });
 
