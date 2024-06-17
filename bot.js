@@ -381,6 +381,43 @@ const commands = {
             connection.destroy();
         });
     },
+    cerda: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('oye nena acaso eres una cerda de angry birds 🥵')
+            .setColor('Aqua')
+            .setDescription(`CERDA`)
+            .setImage('https://i.ibb.co/V3hGbbp/image.png');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'ANGRY BIRDS.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });
+    },
     hdp: (message, args) => {
         if (!message.member.voice.channel) {
             return message.reply('Necesitas estar en un canal de voz para usar este comando.');
