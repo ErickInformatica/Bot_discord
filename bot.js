@@ -418,43 +418,6 @@ const commands = {
             connection.destroy();
         });
     },
-    200: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('DOSCIENTOOOOOOOOOOS')
-            .setColor('Aqua')
-            .setDescription(`DOSCIENTOOOOOOOOOOS`)
-            .setImage('https://i.ibb.co/P9yfkfV/kevinite.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, '200.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
-    },
     bobo: (message, args) => {
         if (!message.member.voice.channel) {
             return message.reply('Necesitas estar en un canal de voz para usar este comando.');
