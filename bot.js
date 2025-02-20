@@ -655,6 +655,44 @@ const commands = {
             .setImage('https://i.ibb.co/cQCJc2D/wooshnt.png');
 
         message.reply({ embeds: [embed] });
+    },
+    yolepregunte: (message, args) => {
+        if (!message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+        
+        const embed = new EmbedBuilder()
+            .setTitle('TRANQUILOS!! YO LE PREGUNTE')
+            .setColor('Aqua')
+            .setDescription(`YO PREGUNTE`)
+            .setImage('https://i.ibb.co/V3hGbbp/image.png');
+        
+        message.reply({ embeds: [embed] });
+
+        const channel = message.member.voice.channel;
+        const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+        });
+
+        const player = createAudioPlayer();
+        const resource = createAudioResource(path.join(__dirname, 'yo-le-pregunte.mp3'));
+        
+        player.play(resource);
+        connection.subscribe(player);
+
+        player.on(AudioPlayerStatus.Idle, () => {
+            player.stop();
+            connection.destroy();
+        });
+
+        player.on('error', error => {
+            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+            player.stop();
+            connection.destroy();
+        });        
+        
     }
 };
 
