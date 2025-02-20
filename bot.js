@@ -665,7 +665,7 @@ const commands = {
             .setTitle('TRANQUILOS!! YO LE PREGUNTE')
             .setColor('Aqua')
             .setDescription(`YO PREGUNTE`)
-            .setImage('https://i.ibb.co/V3hGbbp/image.png');
+            .setImage('https://i.ibb.co/9kNRp5Xt/2025-02-20-16-07-39.gif');
         
         message.reply({ embeds: [embed] });
 
