@@ -243,6 +243,26 @@ const commandConfig = {
         audioFile: 'yo-le-pregunte.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    "10min": {
+        embedConfig: {
+            title: 'AHORITA CAIGO EN 10 MINUTOS',
+            color: 'Aqua',
+            getDescription: () => 'GORDA TIME',
+            image: 'https://i.ibb.co/5X8DD4sw/10MIN.jpg'
+        },
+        requiresVoice: false
+    },
+    taxista: {
+        embedConfig: {
+            title: 'ALGUIEN PIDIO UBER?',
+            color: 'Aqua',
+            getDescription: () => 'SALE UBER ANTIGUA!',
+            image: 'https://i.ibb.co/ycF4wvHS/taxista.png'
+        },
+        audioFile: 'taxista.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
