@@ -34,668 +34,288 @@ const commandCoolDown = (userId, commandName, duration) => {
     return null;
 };
 
-
-const commands = {
-    esta: (message, args) => {
-        const embed = new EmbedBuilder()
-            .setTitle('PARA EL PUTO')
-            .setColor('Red')
-            .setDescription(`Esta .l. para el puto ${args.join(' ')}!`);
-            var numRandom = Math.floor(Math.random() * 11) + 1;
-            switch (numRandom) {
-                case 1:
-                    embed.setImage('https://i.ibb.co/QnjTL6B/trash-finger.gif')
-                    break;
-                case 2:
-                    embed.setImage('https://i.ibb.co/MGCn3J9/hat-finger.gif')
-                    break;
-                case 3:
-                    embed.setImage('https://i.ibb.co/JQ90Rjv/hail-finger.gif')
-                    break;
-                case 4:
-                    embed.setImage('https://i.ibb.co/zPLZrjj/pichu-finger.gif')
-                    break;
-                case 5:
-                    embed.setImage('https://i.ibb.co/r2bxg7J/window-finger.gif')
-                    break;
-                case 6:
-                    embed.setImage('https://i.ibb.co/mNy3rND/kid-finger.gif')
-                    break;
-                case 7:
-                    embed.setImage('https://i.ibb.co/vX8sN44/girl-finger.gif')
-                    break;
-                case 8:
-                    embed.setImage('https://i.ibb.co/tQXqSLD/feet-finger.gif')
-                    break;
-                case 9:
-                    embed.setImage('https://i.ibb.co/mcv1Yr8/happykid-finger.gif')
-                    break;
-                case 10:
-                    embed.setImage('https://i.ibb.co/VxGq8p4/baby-finger.gif')
-                    break;
-                case 11:
-                    embed.setImage('https://i.ibb.co/HpFRvTX/horse-finger.gif')
-                    break;
-            }
-        message.reply({ embeds: [embed] });
+// Configuración de comandos
+const commandConfig = {
+    esta: {
+        embedConfig: {
+            title: 'PARA EL PUTO',
+            color: 'Red',
+            getDescription: (args) => `Esta .l. para el puto ${args.join(' ')}!`,
+            images: [
+                'https://i.ibb.co/QnjTL6B/trash-finger.gif',
+                'https://i.ibb.co/MGCn3J9/hat-finger.gif',
+                'https://i.ibb.co/JQ90Rjv/hail-finger.gif',
+                'https://i.ibb.co/zPLZrjj/pichu-finger.gif',
+                'https://i.ibb.co/r2bxg7J/window-finger.gif',
+                'https://i.ibb.co/mNy3rND/kid-finger.gif',
+                'https://i.ibb.co/vX8sN44/girl-finger.gif',
+                'https://i.ibb.co/tQXqSLD/feet-finger.gif',
+                'https://i.ibb.co/mcv1Yr8/happykid-finger.gif',
+                'https://i.ibb.co/VxGq8p4/baby-finger.gif',
+                'https://i.ibb.co/HpFRvTX/horse-finger.gif',
+            ]
+        },
+        requiresVoice: false
     },
-    picoteando: async (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('ME ESTA PICOTEANDO')
-            .setColor('Aqua')
-            .setDescription(`Vean banda me esta picoteando, ${args.join(' ')}! AHHH!! PUTO!! SUELTAME ALV!!`)
-            .setImage('https://i.ibb.co/cJhDGyN/picoteando.gif');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'me-esta-picando-banda.m4a'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    picoteando: {
+        embedConfig: {
+            title: 'ME ESTA PICOTEANDO',
+            color: 'Aqua',
+            getDescription: (args) => `Vean banda me esta picoteando, ${args.join(' ')}! AHHH!! PUTO!! SUELTAME ALV!!`,
+            image: 'https://i.ibb.co/cJhDGyN/picoteando.gif'
+        },
+        audioFile: 'me-esta-picando-banda.m4a',
+        requiresVoice: false,
+        audioRequiresVoice: true
     },
-    adiosito: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('BESOS, BESITOS, BESOS')
-            .setColor('Red')
-            .setDescription(`VAMONOS ALV ${args.join(' ')}!`)
-            .setImage('https://i.ibb.co/LhHDhqG/Webp-net-gifmaker.gif')
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'kevin-audio.m4a'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    adiosito: {
+        embedConfig: {
+            title: 'BESOS, BESITOS, BESOS',
+            color: 'Red',
+            getDescription: (args) => `VAMONOS ALV ${args.join(' ')}!`,
+            image: 'https://i.ibb.co/LhHDhqG/Webp-net-gifmaker.gif'
+        },
+        audioFile: 'kevin-audio.m4a',
+        requiresVoice: false,
+        audioRequiresVoice: true
     },
-    'ñam': (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('A COMER PUERCAS!!!')
-            .setColor('Red')
-            .setDescription(`ÑAÑAÑAÑAÑAÑAÑAÑAÑAÑA`)
-            .setImage('https://i.ibb.co/zZkStgV/nanana.gif')
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'calichin.m4a'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    'ñam': {
+        embedConfig: {
+            title: 'A COMER PUERCAS!!!',
+            color: 'Red',
+            description: 'ÑAÑAÑAÑAÑAÑAÑAÑAÑAÑA',
+            image: 'https://i.ibb.co/zZkStgV/nanana.gif'
+        },
+        audioFile: 'calichin.m4a',
+        requiresVoice: true
     },
-    kansas: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const row = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-                .setLabel('Ere Gay?')
-                .setStyle(ButtonStyle.Link)
-                .setURL('https://www.youtube.com/watch?v=h3Bcjy0l6Yw')
-        );
-    
-        const embed = new EmbedBuilder()
-            .setTitle('SOY GAY SOY GAY Y NO TIENE NADA DE MALO')
-            .setDescription('FORTINAITI!!!');
-        
-        message.reply({ embeds: [embed], components: [row] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'soy-gay-y-no-tiene-nada-de-malo.m4a'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    kansas: {
+        embedConfig: {
+            title: 'SOY GAY SOY GAY Y NO TIENE NADA DE MALO',
+            description: 'FORTINAITI!!!',
+            components: [
+                new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setLabel('Ere Gay?')
+                            .setStyle(ButtonStyle.Link)
+                            .setURL('https://www.youtube.com/watch?v=h3Bcjy0l6Yw')
+                    )
+                ]
+        },
+        audioFile: 'soy-gay-y-no-tiene-nada-de-malo.m4a',
+        requiresVoice: true
     },
-    yip: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('ASDFASGADSFKAJSDHFKJALSDFHASLDF')
-            .setColor('Red')
-            .setDescription(`ASI COMO LO OYERON PUTOS`)
-            .setImage('https://i.ibb.co/n8Kknsb/nigel-thornberry-kid.gif')
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'kansas.m4a'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    yip: {
+        embedConfig: {
+            title: 'ASDFASGADSFKAJSDHFKJALSDFHASLDF',
+            color: 'Red',
+            description: 'ASI COMO LO OYERON PUTOS',
+            image: 'https://i.ibb.co/n8Kknsb/nigel-thornberry-kid.gif'
+        },
+        audioFile: 'kansas.m4a',
+        requiresVoice: true
     },
-    pozole: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('WORT WORT WORT')
-            .setColor('Aqua')
-            .setDescription(`WORT WORT WORT, POZOLE?`)
-            .setImage('https://i.ibb.co/MSCF5qH/pozole.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'pozole-loudess2.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    pozole: {
+        embedConfig: {
+            title: 'WORT WORT WORT',
+            color: 'Aqua',
+            getDescription: () => 'WORT WORT WORT, POZOLE?',
+            image: 'https://i.ibb.co/MSCF5qH/pozole.png'
+        },
+        audioFile: 'pozole-loudess2.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     },
-    breach: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('LEEEEETSSS GOOOO!!')
-            .setColor('Aqua')
-            .setDescription(`LETS GO?`)
-            .setImage('https://i.ibb.co/pXS3DvF/image.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'Voicy_LETS GO.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    breach: {
+        embedConfig: {
+            title: 'LEEEEETSSS GOOOO!!',
+            color: 'Aqua',
+            getDescription: () => 'LETS GO?',
+            image: 'https://i.ibb.co/pXS3DvF/image.png'
+        },
+        audioFile: 'Voicy_LETS GO.mp3',
+        requiresVoice: true
     },
-    unmedico: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('AYUDAAAA UN MEDICOOOOOOOO')
-            .setColor('Aqua')
-            .setDescription(`REVIVA ZORRA XD`)
-            .setImage('https://i.ibb.co/ChmPC9V/edgar-sage.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'SAGE.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    unmedico: {
+        embedConfig: {
+            title: 'AYUDAAAA UN MEDICOOOOOOOO',
+            color: 'Aqua',
+            getDescription: () => 'REVIVA ZORRA XD',
+            image: 'https://i.ibb.co/ChmPC9V/edgar-sage.png'
+        },
+        audioFile: 'SAGE.mp3',
+        requiresVoice: true
     },
-    cerda: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('oye nena acaso eres una cerda de angry birds 🥵')
-            .setColor('Aqua')
-            .setDescription(`CERDA`)
-            .setImage('https://i.ibb.co/V3hGbbp/image.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'ANGRY BIRDS.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    cerda: {
+        embedConfig: {
+            title: 'oye nena acaso eres una cerda de angry birds 🥵',
+            color: 'Aqua',
+            getDescription: () => 'CERDA',
+            image: 'https://i.ibb.co/V3hGbbp/image.png'
+        },
+        audioFile: 'ANGRY BIRDS.mp3',
+        requiresVoice: true
     },
-    hdp: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('ME VOY A ALIAR CON SIRIA')
-            .setColor('Aqua')
-            .setDescription(`HIJOS DE PUTAAAAA!`)
-            .setImage('https://i.ibb.co/yB1Jw1r/image.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'Me voy aliar con siri.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    hdp: {
+        embedConfig: {
+            title: 'ME VOY A ALIAR CON SIRIA',
+            color: 'Aqua',
+            getDescription: () => 'HIJOS DE PUTAAAAA!',
+            image: 'https://i.ibb.co/yB1Jw1r/image.png'
+        },
+        audioFile: 'Me voy aliar con siri.mp3',
+        requiresVoice: true
     },
-    bobo: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('ANDA PA ASHA BOBO!')
-            .setColor('Aqua')
-            .setDescription(`BOBO!`)
-            .setImage('https://i.ibb.co/Rj641Tv/image.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'gekko.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    bobo: {
+        embedConfig: {
+            title: 'ANDA PA ASHA BOBO!',
+            color: 'Aqua',
+            getDescription: () => 'BOBO!',
+            image: 'https://i.ibb.co/Rj641Tv/image.png'
+        },
+        audioFile: 'gekko.mp3',
+        requiresVoice: true
     },
-    barberia: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('PASO LA MUNI')
-            .setColor('Aqua')
-            .setDescription(`EN LA BARBERIAAAA!`)
-            .setImage('https://i.ibb.co/K6z9hxb/barberia.jpg');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'BARBERIA.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    barberia: {
+        embedConfig: {
+            title: 'PASO LA MUNI',
+            color: 'Aqua',
+            getDescription: () => 'EN LA BARBERIAAAA!',
+            image: 'https://i.ibb.co/K6z9hxb/barberia.jpg'
+        },
+        audioFile: 'BARBERIA.mp3',
+        requiresVoice: true
     },
-    compe: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('VA VEEEEER COMPEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
-            .setColor('Aqua')
-            .setDescription(`PERROS TRIPLE IJUEPUTAS!`)
-            .setImage('https://i.ibb.co/zXbVSdF/images-1.jpg');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'COMPE.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    compe: {
+        embedConfig: {
+            title: 'VA VEEEEER COMPEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',
+            color: 'Aqua',
+            getDescription: () => 'PERROS TRIPLE IJUEPUTAS!',
+            image: 'https://i.ibb.co/zXbVSdF/images-1.jpg'
+        },
+        audioFile: 'COMPE.mp3',
+        requiresVoice: true
     },
-    chatarra: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('SE COMPRAAAAA LA CHATARRAAAAA')
-            .setColor('Aqua')
-            .setDescription(`SE COMPRAAAAA LA CHATARRAAAAA`)
-            .setImage('https://i.ibb.co/gmTfm8Q/kevin-sabrozo-removebg-preview.png');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'chatarra.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    chatarra: {
+        embedConfig: {
+            title: 'SE COMPRAAAAA LA CHATARRAAAAA',
+            color: 'Aqua',
+            getDescription: () => 'SE COMPRAAAAA LA CHATARRAAAAA',
+            image: 'https://i.ibb.co/gmTfm8Q/kevin-sabrozo-removebg-preview.png'
+        },
+        audioFile: 'chatarra.mp3',
+        requiresVoice: true
     },
-    mp: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('MP')
-            .setColor('Aqua')
-            .setDescription(`MANCOS PROMEDIO`)
-            .setImage('https://i.ibb.co/dcn0qmb/Imagen-de-Whats-App-2023-12-16-a-las-17-53-12-38ee33c7.jpg');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'MP.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });
+    mp: {
+        embedConfig: {
+            title: 'MP',
+            color: 'Aqua',
+            getDescription: () => 'MANCOS PROMEDIO',
+            image: 'https://i.ibb.co/dcn0qmb/Imagen-de-Whats-App-2023-12-16-a-las-17-53-12-38ee33c7.jpg'
+        },
+        audioFile: 'MP.mp3',
+        requiresVoice: true
     },
-    woosh: (message, args) => {
-        const embed = new EmbedBuilder()
-            .setTitle('WOOOOSHHH!! MAMAEGG')
-            .setColor('Red')
-            .setImage('https://i.ibb.co/pZrXNJX/woosh.jpg');
-
-        message.reply({ embeds: [embed] });
+    woosh: {
+        embedConfig: {
+            title: 'WOOOOSHHH!! MAMAEGG',
+            color: 'Red',
+            image: 'https://i.ibb.co/pZrXNJX/woosh.jpg'
+        },
+        requiresVoice: false
     },
-    wooshnt: (message, args) => {
-        const embed = new EmbedBuilder()
-            .setTitle(`WOOOOSHHHN'T!! BITCH`)
-            .setColor('Red')
-            .setImage('https://i.ibb.co/cQCJc2D/wooshnt.png');
-
-        message.reply({ embeds: [embed] });
+    wooshnt: {
+        embedConfig: {
+            title: 'WOOOOSHHHN\'T!! BITCH',
+            color: 'Red',
+            image: 'https://i.ibb.co/cQCJc2D/wooshnt.png'
+        },
+        requiresVoice: false
     },
-    yolepregunte: (message, args) => {
-        if (!message.member.voice.channel) {
-            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
-        }
-        
-        const embed = new EmbedBuilder()
-            .setTitle('TRANQUILOS!! YO LE PREGUNTE')
-            .setColor('Aqua')
-            .setDescription(`YO PREGUNTE`)
-            .setImage('https://i.ibb.co/9kNRp5Xt/2025-02-20-16-07-39.gif');
-        
-        message.reply({ embeds: [embed] });
-
-        const channel = message.member.voice.channel;
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-
-        const player = createAudioPlayer();
-        const resource = createAudioResource(path.join(__dirname, 'yo-le-pregunte.mp3'));
-        
-        player.play(resource);
-        connection.subscribe(player);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-            player.stop();
-            connection.destroy();
-        });
-
-        player.on('error', error => {
-            console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-            player.stop();
-            connection.destroy();
-        });        
-        
+    yolepregunte: {
+        embedConfig: {
+            title: 'TRANQUILOS!! YO LE PREGUNTE',
+            color: 'Aqua',
+            getDescription: () => 'YO PREGUNTE',
+            image: 'https://i.ibb.co/9kNRp5Xt/2025-02-20-16-07-39.gif'
+        },
+        audioFile: 'yo-le-pregunte.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
+// Función helper para crear y enviar embeds
+const createAndSendEmbed = (message, config, args) => {
+    const embed = new EmbedBuilder()
+        .setTitle(config.title)
+        .setColor(config.color)
+        .setDescription(config.getDescription ? config.getDescription(args) : config.description);
+
+    if (config.image) {
+        embed.setImage(config.image);
+    } else if (config.images) {
+        const randomImage = config.images[Math.floor(Math.random() * config.images.length)];
+        embed.setImage(randomImage);
+    }
+
+    return message.reply({ embeds: [embed], components: config.components });
+};
+
+// Función helper para reproducir audio
+const playAudio = async (message, audioFile) => {
+    if (!message.member.voice.channel) return false;
+
+    const channel = message.member.voice.channel;
+    const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: channel.guild.id,
+        adapterCreator: channel.guild.voiceAdapterCreator,
+    });
+
+    const player = createAudioPlayer();
+    const resource = createAudioResource(path.join(__dirname, audioFile));
+    
+    player.play(resource);
+    connection.subscribe(player);
+
+    player.on(AudioPlayerStatus.Idle, () => {
+        player.stop();
+        connection.destroy();
+    });
+
+    player.on('error', error => {
+        console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+        player.stop();
+        connection.destroy();
+    });
+
+    return true;
+};
+
+// Refactorización de commands
+const commands = {};
+
+// Generamos dinámicamente los comandos basados en la configuración
+Object.entries(commandConfig).forEach(([commandName, config]) => {
+    commands[commandName] = async (message, args) => {
+        if (config.requiresVoice && !message.member.voice.channel) {
+            return message.reply('Necesitas estar en un canal de voz para usar este comando.');
+        }
+
+        // Enviamos el embed
+        await createAndSendEmbed(message, config.embedConfig, args);
+
+        // Reproducimos el audio solo si:
+        // 1. Tiene archivo de audio
+        // 2. El usuario está en un canal de voz O el audio no requiere voz
+        if (config.audioFile && 
+            (!config.audioRequiresVoice || message.member.voice.channel)) {
+            await playAudio(message, config.audioFile);
+        }
+    };
+});
 
 const COOLDOWN_DURATION = 5000;
 client.on('messageCreate', async message => {
