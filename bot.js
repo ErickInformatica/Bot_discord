@@ -263,6 +263,28 @@ const commandConfig = {
         audioFile: 'taxista.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    macaco: {
+        embedConfig: {
+            title: 'INVOCO AL SALVAJE MACACO!',
+            color: 'Aqua',
+            getDescription: () => 'COMO LOS MACACOS XD',
+            image: 'https://i.ibb.co/tpFmnwDM/macaco.gif'
+        },
+        audioFile: 'macacos.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    },
+    ninoninoni: {
+        embedConfig: {
+            title: 'CORRAN YA APARECIO EL DINOCOMPES!',
+            color: 'Aqua',
+            getDescription: () => 'DIGO, NINONINONI!',
+            image: 'https://i.ibb.co/93bKCJ56/ninoni.jpg'
+        },
+        audioFile: 'Ninoninoni.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
