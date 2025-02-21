@@ -269,7 +269,7 @@ const commandConfig = {
             title: 'INVOCO AL SALVAJE MACACO!',
             color: 'Aqua',
             getDescription: () => 'COMO LOS MACACOS XD',
-            image: 'https://i.ibb.co/tpFmnwDM/macaco.gif'
+            image: 'https://i.ibb.co/mF0pGmwT/3f964206-9d6c-49a8-9faf-7e8cb753d710.gif'
         },
         audioFile: 'macacos.mp3',
         requiresVoice: false,
