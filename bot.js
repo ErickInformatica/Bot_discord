@@ -92,6 +92,7 @@ const commandConfig = {
     kansas: {
         embedConfig: {
             title: 'SOY GAY SOY GAY Y NO TIENE NADA DE MALO',
+            color: 'Red',
             description: 'FORTINAITI!!!',
             components: [
                 new ActionRowBuilder()
@@ -101,10 +102,11 @@ const commandConfig = {
                             .setStyle(ButtonStyle.Link)
                             .setURL('https://www.youtube.com/watch?v=h3Bcjy0l6Yw')
                     )
-                ]
+            ]
         },
         audioFile: 'soy-gay-y-no-tiene-nada-de-malo.m4a',
-        requiresVoice: true
+        requiresVoice: false,
+        audioRequiresVoice: true
     },
     yip: {
         embedConfig: {
@@ -292,7 +294,7 @@ const commandConfig = {
 const createAndSendEmbed = (message, config, args) => {
     const embed = new EmbedBuilder()
         .setTitle(config.title)
-        .setColor(config.color)
+        .setColor(config.color || 'Default')
         .setDescription(config.getDescription ? config.getDescription(args) : config.description);
 
     if (config.image) {
@@ -302,7 +304,13 @@ const createAndSendEmbed = (message, config, args) => {
         embed.setImage(randomImage);
     }
 
-    return message.reply({ embeds: [embed], components: config.components });
+    const messageOptions = { embeds: [embed] };
+    
+    if (config.components) {
+        messageOptions.components = config.components;
+    }
+
+    return message.reply(messageOptions);
 };
 
 // Función helper para reproducir audio
