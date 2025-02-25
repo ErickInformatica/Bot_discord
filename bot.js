@@ -223,6 +223,7 @@ const commandConfig = {
         embedConfig: {
             title: 'WOOOOSHHH!! MAMAEGG',
             color: 'Red',
+            description: 'WOOOOSHHH!!',
             image: 'https://i.ibb.co/pZrXNJX/woosh.jpg'
         },
         requiresVoice: false
@@ -231,6 +232,7 @@ const commandConfig = {
         embedConfig: {
             title: 'WOOOOSHHHN\'T!! BITCH',
             color: 'Red',
+            description: 'WOOOOSHHHN\'T!!',
             image: 'https://i.ibb.co/cQCJc2D/wooshnt.png'
         },
         requiresVoice: false
@@ -285,6 +287,17 @@ const commandConfig = {
             image: 'https://i.ibb.co/93bKCJ56/ninoni.jpg'
         },
         audioFile: 'Ninoninoni.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    },
+    shokansas: {
+        embedConfig: {
+            title: 'SHOOOOOOOOOOOOOOOOOOO! KANSAS!!!!!',
+            color: 'Aqua',
+            getDescription: () => 'SHOOOOOOOOOOOOOOOOOOO!',
+            image: 'https://i.ibb.co/twFr5j8r/shut-up.gif'
+        },
+        audioFile: 'SHOO.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
     }
