@@ -326,34 +326,66 @@ const createAndSendEmbed = (message, config, args) => {
     return message.reply(messageOptions);
 };
 
-// Función helper para reproducir audio
+// Agregamos un sistema de cola de reproducción
+const audioQueue = {
+    isPlaying: false,
+    queue: [],
+    async processQueue() {
+        if (this.isPlaying || this.queue.length === 0) return;
+        
+        this.isPlaying = true;
+        const { message, audioFile } = this.queue.shift();
+        
+        try {
+            const channel = message.member.voice.channel;
+            const connection = joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id,
+                adapterCreator: channel.guild.voiceAdapterCreator,
+            });
+
+            const player = createAudioPlayer();
+            const resource = createAudioResource(path.join(__dirname, audioFile));
+            
+            player.play(resource);
+            connection.subscribe(player);
+
+            // Esperamos a que termine de reproducirse el audio
+            await new Promise((resolve, reject) => {
+                player.on(AudioPlayerStatus.Idle, () => {
+                    player.stop();
+                    connection.destroy();
+                    this.isPlaying = false;
+                    resolve();
+                });
+
+                player.on('error', error => {
+                    console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+                    player.stop();
+                    connection.destroy();
+                    this.isPlaying = false;
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            console.error('Error processing audio queue:', error);
+            this.isPlaying = false;
+        }
+
+        // Procesar el siguiente en la cola
+        this.processQueue();
+    },
+    
+    addToQueue(message, audioFile) {
+        this.queue.push({ message, audioFile });
+        this.processQueue();
+    }
+};
+
+// Modificamos la función playAudio para usar la cola
 const playAudio = async (message, audioFile) => {
     if (!message.member.voice.channel) return false;
-
-    const channel = message.member.voice.channel;
-    const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: channel.guild.id,
-        adapterCreator: channel.guild.voiceAdapterCreator,
-    });
-
-    const player = createAudioPlayer();
-    const resource = createAudioResource(path.join(__dirname, audioFile));
-    
-    player.play(resource);
-    connection.subscribe(player);
-
-    player.on(AudioPlayerStatus.Idle, () => {
-        player.stop();
-        connection.destroy();
-    });
-
-    player.on('error', error => {
-        console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
-        player.stop();
-        connection.destroy();
-    });
-
+    audioQueue.addToQueue(message, audioFile);
     return true;
 };
 
