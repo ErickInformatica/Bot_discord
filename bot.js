@@ -300,6 +300,17 @@ const commandConfig = {
         audioFile: 'SHOO.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    hayunamujer: {
+        embedConfig: {
+            title: 'HAYYYY UNA MUJEEEEEEER!!',
+            color: 'Aqua',
+            getDescription: () => 'SPICY, QA, F1!!',
+            image: 'https://i.ibb.co/6RhxrWH8/kevin-sabrozo.jpg'
+        },
+        audioFile: 'hayunamujer.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
