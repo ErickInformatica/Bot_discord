@@ -330,6 +330,9 @@ const createAndSendEmbed = (message, config, args) => {
 const audioQueue = {
     isPlaying: false,
     queue: [],
+    currentConnection: null,
+    currentPlayer: null,
+
     async processQueue() {
         if (this.isPlaying || this.queue.length === 0) {
             console.log('Cola no procesada:', this.isPlaying ? 'Ya reproduciendo' : 'Cola vacía');
@@ -349,54 +352,69 @@ const audioQueue = {
             }
 
             const channel = message.member.voice.channel;
-            const connection = joinVoiceChannel({
+            this.currentConnection = joinVoiceChannel({
                 channelId: channel.id,
                 guildId: channel.guild.id,
                 adapterCreator: channel.guild.voiceAdapterCreator,
             });
 
-            const player = createAudioPlayer();
+            this.currentPlayer = createAudioPlayer();
             const resource = createAudioResource(path.join(__dirname, audioFile));
             
-            player.play(resource);
-            connection.subscribe(player);
+            this.currentPlayer.play(resource);
+            this.currentConnection.subscribe(this.currentPlayer);
+
+            // Manejamos la desconexión manual
+            this.currentConnection.on('stateChange', (oldState, newState) => {
+                if (newState.status === 'destroyed') {
+                    console.log('Conexión destruida manualmente');
+                    this.cleanup();
+                }
+            });
 
             return new Promise((resolve) => {
-                player.on(AudioPlayerStatus.Idle, () => {
+                this.currentPlayer.on(AudioPlayerStatus.Idle, () => {
                     console.log(`Audio terminado: ${audioFile}`);
-                    player.stop();
-                    connection.destroy();
-                    this.isPlaying = false;
-                    this.processQueue();
+                    this.cleanup();
                     resolve();
                 });
 
-                player.on('error', error => {
+                this.currentPlayer.on('error', error => {
                     console.error(`Error reproduciendo ${audioFile}:`, error);
-                    player.stop();
-                    connection.destroy();
-                    this.isPlaying = false;
-                    this.processQueue();
+                    this.cleanup();
                     resolve();
                 });
 
-                // Agregamos un timeout de seguridad
+                // Timeout de seguridad
                 setTimeout(() => {
                     if (this.isPlaying) {
                         console.log(`Timeout de seguridad activado para: ${audioFile}`);
-                        player.stop();
-                        connection.destroy();
-                        this.isPlaying = false;
-                        this.processQueue();
+                        this.cleanup();
                         resolve();
                     }
-                }, 30000); // 30 segundos de timeout
+                }, 30000);
             });
         } catch (error) {
             console.error('Error procesando cola de audio:', error);
-            this.isPlaying = false;
-            this.processQueue();
+            this.cleanup();
         }
+    },
+
+    cleanup() {
+        try {
+            if (this.currentPlayer) {
+                this.currentPlayer.stop();
+                this.currentPlayer = null;
+            }
+            if (this.currentConnection) {
+                this.currentConnection.destroy();
+                this.currentConnection = null;
+            }
+        } catch (error) {
+            console.error('Error en cleanup:', error);
+        }
+        this.isPlaying = false;
+        this.processQueue();
     },
     
     addToQueue(message, audioFile) {
@@ -404,7 +422,7 @@ const audioQueue = {
         this.queue.push({ message, audioFile });
         this.processQueue().catch(error => {
             console.error('Error en processQueue:', error);
-            this.isPlaying = false;
+            this.cleanup();
         });
     }
 };
