@@ -326,17 +326,28 @@ const createAndSendEmbed = (message, config, args) => {
     return message.reply(messageOptions);
 };
 
-// Agregamos un sistema de cola de reproducción
+// Modificamos el sistema de cola de reproducción
 const audioQueue = {
     isPlaying: false,
     queue: [],
     async processQueue() {
-        if (this.isPlaying || this.queue.length === 0) return;
+        if (this.isPlaying || this.queue.length === 0) {
+            console.log('Cola no procesada:', this.isPlaying ? 'Ya reproduciendo' : 'Cola vacía');
+            return;
+        }
         
         this.isPlaying = true;
         const { message, audioFile } = this.queue.shift();
+        console.log(`Procesando audio: ${audioFile}`);
         
         try {
+            if (!message.member.voice.channel) {
+                console.log('Usuario no está en un canal de voz');
+                this.isPlaying = false;
+                this.processQueue();
+                return;
+            }
+
             const channel = message.member.voice.channel;
             const connection = joinVoiceChannel({
                 channelId: channel.id,
@@ -350,43 +361,67 @@ const audioQueue = {
             player.play(resource);
             connection.subscribe(player);
 
-            // Esperamos a que termine de reproducirse el audio
-            await new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 player.on(AudioPlayerStatus.Idle, () => {
+                    console.log(`Audio terminado: ${audioFile}`);
                     player.stop();
                     connection.destroy();
                     this.isPlaying = false;
+                    this.processQueue();
                     resolve();
                 });
 
                 player.on('error', error => {
-                    console.error(`Error: ${error.message} with resource ${error.resource.metadata.title}`);
+                    console.error(`Error reproduciendo ${audioFile}:`, error);
                     player.stop();
                     connection.destroy();
                     this.isPlaying = false;
-                    reject(error);
+                    this.processQueue();
+                    resolve();
                 });
+
+                // Agregamos un timeout de seguridad
+                setTimeout(() => {
+                    if (this.isPlaying) {
+                        console.log(`Timeout de seguridad activado para: ${audioFile}`);
+                        player.stop();
+                        connection.destroy();
+                        this.isPlaying = false;
+                        this.processQueue();
+                        resolve();
+                    }
+                }, 30000); // 30 segundos de timeout
             });
         } catch (error) {
-            console.error('Error processing audio queue:', error);
+            console.error('Error procesando cola de audio:', error);
             this.isPlaying = false;
+            this.processQueue();
         }
-
-        // Procesar el siguiente en la cola
-        this.processQueue();
     },
     
     addToQueue(message, audioFile) {
+        console.log(`Agregando a la cola: ${audioFile}`);
         this.queue.push({ message, audioFile });
-        this.processQueue();
+        this.processQueue().catch(error => {
+            console.error('Error en processQueue:', error);
+            this.isPlaying = false;
+        });
     }
 };
 
-// Modificamos la función playAudio para usar la cola
+// Modificamos la función playAudio para manejar mejor los errores
 const playAudio = async (message, audioFile) => {
-    if (!message.member.voice.channel) return false;
-    audioQueue.addToQueue(message, audioFile);
-    return true;
+    try {
+        if (!message.member.voice.channel) {
+            console.log('Usuario no está en un canal de voz');
+            return false;
+        }
+        audioQueue.addToQueue(message, audioFile);
+        return true;
+    } catch (error) {
+        console.error('Error en playAudio:', error);
+        return false;
+    }
 };
 
 // Refactorización de commands
