@@ -311,6 +311,17 @@ const commandConfig = {
         audioFile: 'hayunamujer.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    torneo: {
+        embedConfig: {
+            title: 'ES HORA DE DE DE DE DEL DUELO!',
+            color: 'Aqua',
+            getDescription: () => 'SALIO TORNEO!',
+            image: 'https://i.ibb.co/6RhxrWH8/kevin-sabrozo.jpg'
+        },
+        audioFile: 'ES HORA DE DE DE DE DE DEL DUELO!.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
@@ -357,16 +368,34 @@ const audioQueue = {
         try {
             if (!message.member.voice.channel) {
                 console.log('Usuario no está en un canal de voz');
-                this.isPlaying = false;
-                this.processQueue();
+                this.cleanup(false);
                 return;
             }
 
             const channel = message.member.voice.channel;
+            
+            // Verificamos si ya existe una conexión y la limpiamos
+            if (this.currentConnection) {
+                try {
+                    this.currentConnection.destroy();
+                } catch (error) {
+                    console.log('Conexión previa ya destruida');
+                }
+                this.currentConnection = null;
+            }
+
             this.currentConnection = joinVoiceChannel({
                 channelId: channel.id,
                 guildId: channel.guild.id,
                 adapterCreator: channel.guild.voiceAdapterCreator,
+            });
+
+            // Manejamos la desconexión manual
+            this.currentConnection.on('stateChange', (oldState, newState) => {
+                if (newState.status === 'destroyed' || newState.status === 'disconnected') {
+                    console.log(`Conexión ${newState.status}`);
+                    this.cleanup(false); // No intentamos destruir la conexión de nuevo
+                }
             });
 
             this.currentPlayer = createAudioPlayer();
@@ -375,57 +404,58 @@ const audioQueue = {
             this.currentPlayer.play(resource);
             this.currentConnection.subscribe(this.currentPlayer);
 
-            // Manejamos la desconexión manual
-            this.currentConnection.on('stateChange', (oldState, newState) => {
-                if (newState.status === 'destroyed') {
-                    console.log('Conexión destruida manualmente');
-                    this.cleanup();
-                }
-            });
-
             return new Promise((resolve) => {
                 this.currentPlayer.on(AudioPlayerStatus.Idle, () => {
                     console.log(`Audio terminado: ${audioFile}`);
-                    this.cleanup();
+                    this.cleanup(true);
                     resolve();
                 });
 
                 this.currentPlayer.on('error', error => {
                     console.error(`Error reproduciendo ${audioFile}:`, error);
-                    this.cleanup();
+                    this.cleanup(true);
                     resolve();
                 });
 
-                // Timeout de seguridad
                 setTimeout(() => {
                     if (this.isPlaying) {
                         console.log(`Timeout de seguridad activado para: ${audioFile}`);
-                        this.cleanup();
+                        this.cleanup(true);
                         resolve();
                     }
                 }, 30000);
             });
         } catch (error) {
             console.error('Error procesando cola de audio:', error);
-            this.cleanup();
+            this.cleanup(false);
         }
     },
 
-    cleanup() {
+    cleanup(destroyConnection = true) {
         try {
             if (this.currentPlayer) {
-                this.currentPlayer.stop();
+                try {
+                    this.currentPlayer.stop();
+                } catch (error) {
+                    console.log('Error al detener el reproductor:', error);
+                }
                 this.currentPlayer = null;
             }
-            if (this.currentConnection) {
-                this.currentConnection.destroy();
+
+            if (this.currentConnection && destroyConnection) {
+                try {
+                    this.currentConnection.destroy();
+                } catch (error) {
+                    console.log('Error al destruir la conexión:', error);
+                }
                 this.currentConnection = null;
             }
         } catch (error) {
-            console.error('Error en cleanup:', error);
+            console.log('Error en cleanup:', error);
+        } finally {
+            this.isPlaying = false;
+            this.processQueue();
         }
-        this.isPlaying = false;
-        this.processQueue();
     },
     
     addToQueue(message, audioFile) {
