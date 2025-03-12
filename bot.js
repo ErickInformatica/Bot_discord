@@ -333,6 +333,17 @@ const commandConfig = {
         audioFile: 'tribu.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    nahual: {
+        embedConfig: {
+            title: 'YA LLEGO EL NAGUAL!!',
+            color: 'Aqua',
+            getDescription: () => 'INEI KUDESAI UNYUNGA UNTAYÁ',
+            image: 'https://i.ibb.co/0VWqKK9n/nahual-nite.gif'
+        },
+        audioFile: 'nahual.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
