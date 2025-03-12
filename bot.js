@@ -317,9 +317,20 @@ const commandConfig = {
             title: 'ES HORA DE DE DE DE DEL DUELO!',
             color: 'Aqua',
             getDescription: () => 'SALIO TORNEO!',
-            image: 'https://i.ibb.co/6RhxrWH8/kevin-sabrozo.jpg'
+            image: 'https://i.ibb.co/Y7J4DVN2/duelo.gif'
         },
         audioFile: 'ES HORA DE DE DE DE DE DEL DUELO!.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    },
+    tribu: {
+        embedConfig: {
+            title: 'KISHEEEE LA TRIBU!!',
+            color: 'Aqua',
+            getDescription: () => 'UNGA UNGA! INVOCO AL MONO CAPUCHINO',
+            image: 'https://i.ibb.co/RpPtm6PK/received-919155221521744.jpg'
+        },
+        audioFile: 'tribu.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
     }
