@@ -344,6 +344,17 @@ const commandConfig = {
         audioFile: 'nahual.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    sniper: {
+        embedConfig: {
+            title: 'QUIEN ES DIEGO SNIPER!!',
+            color: 'Aqua',
+            getDescription: () => 'YOU WANT TO PLAY? LETS PLAY',
+            image: 'https://i.ibb.co/ccpqzYLz/caliche-sniper.png'
+        },
+        audioFile: 'Quien es Diego Sniper_.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
