@@ -360,7 +360,7 @@ const commandConfig = {
         embedConfig: {
             title: 'AUYENTAS A LAS PUERCAS DE LAS COMPES!!',
             color: 'Aqua',
-            getDescription: () => `SUVASHE PA' AYA ${args.join(' ')}, VAYA CHARSE`,
+            getDescription: (args) => `SUVASHE PA' AYA ${args.join(' ')}, VAYA CHARSE`,
             image: 'https://i.ibb.co/B5fCWHj2/piedra.png'
         },
         requiresVoice: false
