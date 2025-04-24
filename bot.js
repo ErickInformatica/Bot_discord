@@ -2,6 +2,20 @@ const { Client, GatewayIntentBits, EmbedBuilder, VoiceChannel, MessageEmbed, Col
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const path = require('path');
 const config = require('./auth.json');
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configurar ruta básica para mantener vivo el servicio
+app.get('/', (req, res) => {
+    res.send('¡Bot Discord está vivo! 🤖');
+});
+
+// Iniciar el servidor Express
+app.listen(PORT, () => {
+    console.log(`Servidor Express escuchando en el puerto ${PORT}`);
+});
+
 const cooldowns = new Collection();
 
 const client = new Client({
