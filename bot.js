@@ -260,7 +260,8 @@ const commandConfig = {
         },
         audioFile: 'yo-le-pregunte.mp3',
         requiresVoice: false,
-        audioRequiresVoice: true
+        audioRequiresVoice: true,
+        aliases: ['tranquilos']
     },
     "10min": {
         embedConfig: {
@@ -378,7 +379,19 @@ const commandConfig = {
             image: 'https://i.ibb.co/B5fCWHj2/piedra.png'
         },
         requiresVoice: false
-    }
+    },
+    cola: {
+        embedConfig: {
+            title: 'SALIERON LAS COMPES!!',
+            color: 'Aqua',
+            getDescription: () => 'YUPIIIIIIIIII 🤡',
+            image: 'https://i.ibb.co/xqx2ghZ6/Los-Padrinos-M-gicos-Esta-es-la-atracci-n.gif'
+        },
+        audioFile: 'Los Padrinos Mágicos - Esta es la atracción.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true,
+        aliases: ['atraccion','colaCompe']
+    },
 };
 
 // Función helper para crear y enviar embeds
@@ -568,17 +581,26 @@ client.on('messageCreate', async message => {
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    if (!cooldowns.has(command)) {
-        cooldowns.set(command, new Collection());
+    // Buscar el comando principal si es un alias
+    let mainCommand = command;
+    for (const [cmdName, cmdConfig] of Object.entries(commandConfig)) {
+        if (cmdConfig.aliases && cmdConfig.aliases.includes(command)) {
+            mainCommand = cmdName;
+            break;
+        }
     }
 
-    const timeLeft = commandCoolDown(message.author.id, command, COOLDOWN_DURATION);
+    if (!cooldowns.has(mainCommand)) {
+        cooldowns.set(mainCommand, new Collection());
+    }
+
+    const timeLeft = commandCoolDown(message.author.id, mainCommand, COOLDOWN_DURATION);
     if (timeLeft) {
-        return message.reply(`Por favor espera ${timeLeft.toFixed(1)} segundo(s) más antes de reusar el comando \`${command}\`.`);
+        return message.reply(`Por favor espera ${timeLeft.toFixed(1)} segundo(s) más antes de reusar el comando \`${mainCommand}\`.`);
     }
 
-    if (commands[command]) {
-        commands[command](message, args);
+    if (commands[mainCommand]) {
+        commands[mainCommand](message, args);
     } else {
         message.reply("NO SEA MULA, NO EXISTE.");
     }
