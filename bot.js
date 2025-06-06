@@ -392,7 +392,7 @@ const commandConfig = {
         audioRequiresVoice: true,
         aliases: ['atraccion','colaCompe']
     },
-    taxiAntigua: {
+    taxiantigua: {
         embedConfig: {
             title: 'YO LA CONOCI EN UN TAXI!!!',
             color: 'Aqua',
