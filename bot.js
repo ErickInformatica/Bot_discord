@@ -392,6 +392,28 @@ const commandConfig = {
         audioRequiresVoice: true,
         aliases: ['atraccion','colaCompe']
     },
+    taxiAntigua: {
+        embedConfig: {
+            title: 'YO LA CONOCI EN UN TAXI!!!',
+            color: 'Aqua',
+            getDescription: () => 'SALE CLUB ANTIGUA!',
+            image: 'https://i.ibb.co/4RJyfjhg/chapugato.png'
+        },
+        audioFile: 'yo la conoci en un taxi.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    },
+    quintero: {
+        embedConfig: {
+            title: 'QUINTEROOOO!!!',
+            color: 'Aqua',
+            getDescription: () => 'QUINTEROOOO!',
+            image: 'https://i.ibb.co/TDq6S9vW/image.png'
+        },
+        audioFile: 'Gol de Quintero a Boca.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    }
 };
 
 // Función helper para crear y enviar embeds
