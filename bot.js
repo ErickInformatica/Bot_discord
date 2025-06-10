@@ -390,7 +390,7 @@ const commandConfig = {
         audioFile: 'Los Padrinos Mágicos - Esta es la atracción.mp3',
         requiresVoice: false,
         audioRequiresVoice: true,
-        aliases: ['atraccion','colaCompe']
+        aliases: ['atraccion','colacompe']
     },
     taxiantigua: {
         embedConfig: {
