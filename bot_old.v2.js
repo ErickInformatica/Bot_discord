@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, VoiceChannel, MessageEmbed, Collection, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, VoiceChannel, MessageEmbed, Collection,ActionRowBuilder, ButtonBuilder, ButtonStyle, } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const path = require('path');
 const config = require('./auth.json');
@@ -453,17 +453,17 @@ const audioQueue = {
         }
         
         this.isPlaying = true;
-        const { interaction, audioFile } = this.queue.shift();
+        const { message, audioFile } = this.queue.shift();
         console.log(`Procesando audio: ${audioFile}`);
         
         try {
-            if (!interaction.member.voice.channel) {
+            if (!message.member.voice.channel) {
                 console.log('Usuario no está en un canal de voz');
                 this.cleanup(false);
                 return;
             }
 
-            const channel = interaction.member.voice.channel;
+            const channel = message.member.voice.channel;
             
             // Verificamos si ya existe una conexión y la limpiamos
             if (this.currentConnection) {
@@ -549,9 +549,9 @@ const audioQueue = {
         }
     },
     
-    addToQueue(interaction, audioFile) {
+    addToQueue(message, audioFile) {
         console.log(`Agregando a la cola: ${audioFile}`);
-        this.queue.push({ interaction, audioFile });
+        this.queue.push({ message, audioFile });
         this.processQueue().catch(error => {
             console.error('Error en processQueue:', error);
             this.cleanup();
@@ -560,13 +560,13 @@ const audioQueue = {
 };
 
 // Modificamos la función playAudio para manejar mejor los errores
-const playAudio = async (interaction, audioFile) => {
+const playAudio = async (message, audioFile) => {
     try {
-        if (!interaction.member.voice.channel) {
+        if (!message.member.voice.channel) {
             console.log('Usuario no está en un canal de voz');
             return false;
         }
-        audioQueue.addToQueue(interaction, audioFile);
+        audioQueue.addToQueue(message, audioFile);
         return true;
     } catch (error) {
         console.error('Error en playAudio:', error);
@@ -625,110 +625,6 @@ client.on('messageCreate', async message => {
         commands[mainCommand](message, args);
     } else {
         message.reply("NO SEA MULA, NO EXISTE.");
-    }
-});
-
-// Crear los comandos slash
-const slashCommands = [];
-
-Object.entries(commandConfig).forEach(([commandName, config]) => {
-    const command = new SlashCommandBuilder()
-        .setName(commandName)
-        .setDescription(`Comando ${commandName}`);
-
-    // Agregar opciones de texto si el comando las necesita
-    if (config.embedConfig.getDescription) {
-        command.addStringOption(option =>
-            option.setName('texto')
-                .setDescription('Texto adicional para el comando')
-                .setRequired(false)
-        );
-    }
-
-    slashCommands.push(command.toJSON());
-});
-
-// Registrar los comandos slash
-const rest = new REST({ version: '10' }).setToken(config.Token);
-
-(async () => {
-    try {
-        console.log('Comenzando a registrar los comandos slash...');
-
-        await rest.put(
-            Routes.applicationCommands(config.ClientId),
-            { body: slashCommands },
-        );
-
-        console.log('¡Comandos slash registrados exitosamente!');
-    } catch (error) {
-        console.error('Error al registrar los comandos slash:', error);
-    }
-})();
-
-// Manejar los comandos slash
-client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
-
-    const commandName = interaction.commandName;
-    const config = commandConfig[commandName];
-
-    if (!config) {
-        return interaction.reply({ content: "NO SEA MULA, NO EXISTE.", ephemeral: true });
-    }
-
-    // Verificar cooldown
-    if (!cooldowns.has(commandName)) {
-        cooldowns.set(commandName, new Collection());
-    }
-
-    const timeLeft = commandCoolDown(interaction.user.id, commandName, COOLDOWN_DURATION);
-    if (timeLeft) {
-        return interaction.reply({ 
-            content: `Por favor espera ${timeLeft.toFixed(1)} segundo(s) más antes de reusar el comando \`${commandName}\`.`,
-            ephemeral: true 
-        });
-    }
-
-    // Verificar si requiere canal de voz
-    if (config.requiresVoice && !interaction.member.voice.channel) {
-        return interaction.reply({ 
-            content: 'Necesitas estar en un canal de voz para usar este comando.',
-            ephemeral: true 
-        });
-    }
-
-    // Obtener argumentos del comando slash
-    const args = [];
-    if (interaction.options.getString('texto')) {
-        args.push(interaction.options.getString('texto'));
-    }
-
-    // Crear y enviar el embed
-    const embed = new EmbedBuilder()
-        .setTitle(config.embedConfig.title)
-        .setColor(config.embedConfig.color || 'Default')
-        .setDescription(config.embedConfig.getDescription ? config.embedConfig.getDescription(args) : config.embedConfig.description);
-
-    if (config.embedConfig.image) {
-        embed.setImage(config.embedConfig.image);
-    } else if (config.embedConfig.images) {
-        const randomImage = config.embedConfig.images[Math.floor(Math.random() * config.embedConfig.images.length)];
-        embed.setImage(randomImage);
-    }
-
-    const messageOptions = { embeds: [embed] };
-    
-    if (config.embedConfig.components) {
-        messageOptions.components = config.embedConfig.components;
-    }
-
-    await interaction.reply(messageOptions);
-
-    // Reproducir audio si es necesario
-    if (config.audioFile && 
-        (!config.audioRequiresVoice || interaction.member.voice.channel)) {
-        await playAudio(interaction, config.audioFile);
     }
 });
 
