@@ -632,6 +632,7 @@ client.on('messageCreate', async message => {
 const slashCommands = [];
 
 Object.entries(commandConfig).forEach(([commandName, config]) => {
+    // Crear el comando principal
     const command = new SlashCommandBuilder()
         .setName(commandName)
         .setDescription(`Comando ${commandName}`);
@@ -646,6 +647,26 @@ Object.entries(commandConfig).forEach(([commandName, config]) => {
     }
 
     slashCommands.push(command.toJSON());
+
+    // Agregar los aliases como comandos separados
+    if (config.aliases) {
+        config.aliases.forEach(alias => {
+            const aliasCommand = new SlashCommandBuilder()
+                .setName(alias)
+                .setDescription(`Alias para el comando ${commandName}`);
+
+            // Agregar las mismas opciones que el comando principal
+            if (config.embedConfig.getDescription) {
+                aliasCommand.addStringOption(option =>
+                    option.setName('texto')
+                        .setDescription('Texto adicional para el comando')
+                        .setRequired(false)
+                );
+            }
+
+            slashCommands.push(aliasCommand.toJSON());
+        });
+    }
 });
 
 // Registrar los comandos slash
@@ -671,21 +692,31 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const commandName = interaction.commandName;
-    const config = commandConfig[commandName];
+    
+    // Buscar el comando principal si es un alias
+    let mainCommand = commandName;
+    for (const [cmdName, cmdConfig] of Object.entries(commandConfig)) {
+        if (cmdConfig.aliases && cmdConfig.aliases.includes(commandName)) {
+            mainCommand = cmdName;
+            break;
+        }
+    }
+
+    const config = commandConfig[mainCommand];
 
     if (!config) {
         return interaction.reply({ content: "NO SEA MULA, NO EXISTE.", ephemeral: true });
     }
 
     // Verificar cooldown
-    if (!cooldowns.has(commandName)) {
-        cooldowns.set(commandName, new Collection());
+    if (!cooldowns.has(mainCommand)) {
+        cooldowns.set(mainCommand, new Collection());
     }
 
-    const timeLeft = commandCoolDown(interaction.user.id, commandName, COOLDOWN_DURATION);
+    const timeLeft = commandCoolDown(interaction.user.id, mainCommand, COOLDOWN_DURATION);
     if (timeLeft) {
         return interaction.reply({ 
-            content: `Por favor espera ${timeLeft.toFixed(1)} segundo(s) más antes de reusar el comando \`${commandName}\`.`,
+            content: `Por favor espera ${timeLeft.toFixed(1)} segundo(s) más antes de reusar el comando \`${mainCommand}\`.`,
             ephemeral: true 
         });
     }
