@@ -425,6 +425,17 @@ const commandConfig = {
         requiresVoice: false,
         audioRequiresVoice: true,
         aliases: ['llamadodeemergencia']
+    },
+    flashbang: {
+        embedConfig: {
+            title: 'FLASHH!!!',
+            color: 'Aqua',
+            getDescription: () => 'FLASH!',
+            image: 'https://i.ibb.co/KcTsDvPB/image.png'
+        },
+        audioFile: 'Flashbang - Counter Strike 2 - Sound Effect (CS2 Game SFX).mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
