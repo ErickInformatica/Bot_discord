@@ -413,6 +413,18 @@ const commandConfig = {
         audioFile: 'Gol de Quintero a Boca.mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    morfeo: {
+        embedConfig: {
+            title: 'MORFEEOOOOOOOO!!!',
+            color: 'Aqua',
+            getDescription: () => 'LLAMADO DE EMERGENCIA!',
+            image: 'https://i.ibb.co/tT84Vk5P/Bodoque-cantando-llamado-de-emergencia.gif'
+        },
+        audioFile: 'Bodoque cantando llamado de emergencia.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true,
+        aliases: ['llamadodeemergencia']
     }
 };
 
