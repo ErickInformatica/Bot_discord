@@ -431,7 +431,7 @@ const commandConfig = {
             title: 'FLASHH!!!',
             color: 'Aqua',
             getDescription: () => 'FLASH!',
-            image: 'https://i.ibb.co/KcTsDvPB/image.png'
+            image: 'https://i.ibb.co/pjy2Yr7x/flashbang-meme.gif'
         },
         audioFile: 'Flashbang - Counter Strike 2 - Sound Effect (CS2 Game SFX).mp3',
         requiresVoice: false,
@@ -453,7 +453,7 @@ const commandConfig = {
             title: 'Te la toco de primera!!!',
             color: 'Aqua',
             getDescription: () => '👯‍♂️👯‍♀️!!!',
-            image: 'https://i.ibb.co/sp3Xn2t6/image.png'
+            image: 'https://i.ibb.co/5hm3QFGz/Davo-xeneise-bailando-toc-y-me-voy-para-tus-plantillas.gif'
         },
         audioFile: 'Davo xeneise bailando tocó y me voy, para tus plantillas..mp3',
         requiresVoice: false,
