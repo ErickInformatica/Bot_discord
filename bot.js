@@ -458,6 +458,28 @@ const commandConfig = {
         audioFile: 'Davo xeneise bailando tocó y me voy, para tus plantillas..mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    estupidinizador: {
+        embedConfig: {
+            title: 'ESTUPIDINIZADOR',
+            color: 'Aqua',
+            getDescription: () => 'ESTUPIDINIZADOR-INADOR',
+            image: 'https://i.ibb.co/9mty8n57/orb-of-confusion-spongebob.gif'
+        },
+        audioFile: 'Orbe de confusión.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    },
+    brains: {
+        embedConfig: {
+            title: 'BRAINZZZZZ',
+            color: 'Aqua',
+            getDescription: () => 'BRAINZZZZZZ',
+            image: 'https://i.ibb.co/0psQQTtn/Plants-Vs-Zombies-Copy-q-TEU7z-HTr-G-1.gif'
+        },
+        audioFile: 'Voicy_The Zombies are coming.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
