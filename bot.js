@@ -436,6 +436,28 @@ const commandConfig = {
         audioFile: 'Flashbang - Counter Strike 2 - Sound Effect (CS2 Game SFX).mp3',
         requiresVoice: false,
         audioRequiresVoice: true
+    },
+    coverme: {
+        embedConfig: {
+            title: 'COVER ME!!!',
+            color: 'Aqua',
+            getDescription: () => 'COVER ME!!!',
+            image: 'https://i.ibb.co/sp3Xn2t6/image.png'
+        },
+        audioFile: 'Counter Strike   Cover me!.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
+    },
+    theone: {
+        embedConfig: {
+            title: 'Te la toco de primera!!!',
+            color: 'Aqua',
+            getDescription: () => '👯‍♂️👯‍♀️!!!',
+            image: 'https://i.ibb.co/sp3Xn2t6/image.png'
+        },
+        audioFile: 'Counter Strike   Cover me!.mp3',
+        requiresVoice: false,
+        audioRequiresVoice: true
     }
 };
 
