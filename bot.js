@@ -799,9 +799,7 @@ client.on('interactionCreate', async interaction => {
         messageOptions.components = config.embedConfig.components;
     }
 
-    await interaction.reply(messageOptions);
-
-    // Reproducir audio si es necesario
+    await interaction.reply({ embeds: [embed] });
     if (config.audioFile && 
         (!config.audioRequiresVoice || interaction.member.voice.channel)) {
         await playAudio(interaction, config.audioFile);
