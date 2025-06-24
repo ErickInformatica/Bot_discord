@@ -455,7 +455,7 @@ const commandConfig = {
             getDescription: () => '👯‍♂️👯‍♀️!!!',
             image: 'https://i.ibb.co/sp3Xn2t6/image.png'
         },
-        audioFile: 'Counter Strike   Cover me!.mp3',
+        audioFile: 'Davo xeneise bailando tocó y me voy, para tus plantillas..mp3',
         requiresVoice: false,
         audioRequiresVoice: true
     }
