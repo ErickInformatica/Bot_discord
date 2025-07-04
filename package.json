@@ -15,5 +15,6 @@
     "ffmpeg-static": "^4.4.0",
     "libsodium-wrappers": "^0.7.9",
     "winston": "^3.3.3"
-  }
+  },
+  "type": "commonjs"
 }

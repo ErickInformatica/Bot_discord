@@ -5,6 +5,7 @@ const config = require('./auth.json');
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const https = require('https');
 
 // Configurar ruta básica para mantener vivo el servicio
 app.get('/', (req, res) => {
@@ -739,7 +740,16 @@ Object.entries(commandConfig).forEach(([commandName, config]) => {
 // Registrar los comandos slash
 const rest = new REST({ version: '10' }).setToken(config.Token);
 
+https.get('https://discord.com/api/v10', (res) => {
+    console.log('Status code Discord API:', res.statusCode);
+}).on('error', (e) => {
+    console.error('Error conectando a Discord API:', e);
+});
+
 (async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10 segundos
+
     try {
         console.log('Token:', config.Token ? 'OK' : 'NO TOKEN');
         console.log('ClientId:', config.ClientId);
@@ -748,11 +758,12 @@ const rest = new REST({ version: '10' }).setToken(config.Token);
 
         await rest.put(
             Routes.applicationCommands(config.ClientId),
-            { body: slashCommands },
+            { body: slashCommands, signal: controller.signal },
         );
-
+        clearTimeout(timeout);
         console.log('¡Comandos slash registrados exitosamente!');
     } catch (error) {
+        clearTimeout(timeout);
         console.error('Error al registrar los comandos slash:', error);
     }
 })();
