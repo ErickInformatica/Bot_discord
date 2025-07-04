@@ -741,6 +741,9 @@ const rest = new REST({ version: '10' }).setToken(config.Token);
 
 (async () => {
     try {
+        console.log('Token:', config.Token ? 'OK' : 'NO TOKEN');
+        console.log('ClientId:', config.ClientId);
+        console.log('Intentando registrar comandos slash...');
         console.log('Comenzando a registrar los comandos slash...');
 
         await rest.put(
