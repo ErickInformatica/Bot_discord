@@ -4,11 +4,13 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./auth.json');
 const ffmpegPath = require('ffmpeg-static');
+const { spawn } = require('child_process');
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const https = require('https');
 
+console.log('FFmpeg path:', ffmpegPath);
 if (ffmpegPath) {
     process.env.FFMPEG_PATH = ffmpegPath;
 }
@@ -565,32 +567,60 @@ const audioQueue = {
 
             this.currentPlayer = createAudioPlayer();
             const filePath = path.join(__dirname, audioFile);
+            
+            console.log(`Intentando reproducir: ${filePath}`);
+            
             if (!fs.existsSync(filePath)) {
                 throw new Error(`Archivo de audio no encontrado: ${filePath}`);
             }
-            const resource = createAudioResource(fs.createReadStream(filePath), {
-                inputType: StreamType.Arbitrary,
+
+            // Usar ffmpeg spawned para mayor compatibilidad
+            const ffmpeg = spawn(ffmpegPath, [
+                '-i', filePath,
+                '-f', 's16le',
+                '-ar', '48000',
+                '-ac', '2',
+                'pipe:1'
+            ], {
+                stdio: ['ignore', 'pipe', 'pipe']
             });
+
+            ffmpeg.stderr.on('data', (data) => {
+                console.log(`[FFmpeg] ${data.toString().trim()}`);
+            });
+
+            const resource = createAudioResource(ffmpeg.stdout, {
+                inputType: StreamType.Raw,
+                inlineVolume: true
+            });
+
+            resource.volume.setVolume(1);
             
             this.currentPlayer.play(resource);
             this.currentConnection.subscribe(this.currentPlayer);
+            
+            console.log(`Audio iniciando: ${audioFile}`);
 
             return new Promise((resolve) => {
                 this.currentPlayer.on(AudioPlayerStatus.Idle, () => {
-                    console.log(`Audio terminado: ${audioFile}`);
+                    console.log(`✓ Audio terminado: ${audioFile}`);
                     this.cleanup(true);
                     resolve();
                 });
 
                 this.currentPlayer.on('error', error => {
-                    console.error(`Error reproduciendo ${audioFile}:`, error);
+                    console.error(`✗ Error reproduciendo ${audioFile}:`, error.message);
                     this.cleanup(true);
                     resolve();
                 });
 
+                this.currentPlayer.on(AudioPlayerStatus.Playing, () => {
+                    console.log(`▶ Reproduciendo: ${audioFile}`);
+                });
+
                 setTimeout(() => {
                     if (this.isPlaying) {
-                        console.log(`Timeout de seguridad activado para: ${audioFile}`);
+                        console.log(`⏱ Timeout de seguridad activado para: ${audioFile}`);
                         this.cleanup(true);
                         resolve();
                     }
