@@ -1,9 +1,11 @@
 const { Client, GatewayIntentBits, EmbedBuilder, VoiceChannel, MessageEmbed, Collection, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes, SlashCommandBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType, entersState, VoiceConnectionStatus } = require('@discordjs/voice');
+const { OpusEncoder } = require('@discordjs/opus');
 const fs = require('fs');
 const path = require('path');
 const config = require('./auth.json');
 const ffmpegPath = require('ffmpeg-static');
+const prism = require('prism-media');
 const { spawn } = require('child_process');
 const express = require('express');
 const app = express();
@@ -574,15 +576,16 @@ const audioQueue = {
                 throw new Error(`Archivo de audio no encontrado: ${filePath}`);
             }
 
-            // Usar ffmpeg spawned para mayor compatibilidad
+            // Usar ffmpeg con salida en Ogg/Opus
             const ffmpeg = spawn(ffmpegPath, [
                 '-hide_banner',
                 '-loglevel', 'warning',
                 '-nostdin',
                 '-i', filePath,
-                '-f', 's16le',
+                '-f', 'ogg',
+                '-c:a', 'libopus',
+                '-b:a', '128k',
                 '-ar', '48000',
-                '-ac', '2',
                 'pipe:1'
             ], {
                 stdio: ['ignore', 'pipe', 'pipe']
@@ -592,13 +595,16 @@ const audioQueue = {
 
             ffmpeg.stdout.on('data', (data) => {
                 if (!isProcessing) {
-                    console.log(`📊 Datos recibidos de ffmpeg (${data.length} bytes)`);
+                    console.log(`📊 Ogg/Opus stream iniciado (${data.length} bytes)`);
                     isProcessing = true;
                 }
             });
 
             ffmpeg.stderr.on('data', (data) => {
-                console.log(`[FFmpeg] ${data.toString().trim()}`);
+                const msg = data.toString().trim();
+                if (msg && !msg.includes('Press [q]')) {
+                    console.log(`[FFmpeg] ${msg}`);
+                }
             });
 
             ffmpeg.on('error', (error) => {
@@ -606,11 +612,8 @@ const audioQueue = {
             });
 
             const resource = createAudioResource(ffmpeg.stdout, {
-                inputType: StreamType.Raw,
-                inlineVolume: true
+                inputType: StreamType.OggOpus,
             });
-
-            resource.volume.setVolume(1);
             
             this.currentPlayer.play(resource);
             this.currentConnection.subscribe(this.currentPlayer);
