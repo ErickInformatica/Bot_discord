@@ -12,10 +12,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const https = require('https');
 
-console.log('FFmpeg path:', ffmpegPath);
-if (ffmpegPath) {
-    process.env.FFMPEG_PATH = ffmpegPath;
-}
+const AUDIO_EXTENSIONS = new Set(['.mp3', '.m4a', '.wav', '.ogg', '.opus']);
+
+const normalizeAudioName = (value) => value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const resolveAudioFile = (audioFile) => {
+    const directPath = path.join(__dirname, audioFile);
+    if (fs.existsSync(directPath)) {
+        return directPath;
+    }
+
+    const normalizedTarget = normalizeAudioName(audioFile);
+    const match = fs.readdirSync(__dirname).find(fileName =>
+        AUDIO_EXTENSIONS.has(path.extname(fileName).toLowerCase()) &&
+        normalizeAudioName(fileName) === normalizedTarget
+    );
+
+    return match ? path.join(__dirname, match) : directPath;
+};
+
+const ffmpegBin = process.env.FFMPEG_PATH || 'ffmpeg';
+
+console.log('FFmpeg bin:', ffmpegBin);
+console.log('FFmpeg static path:', ffmpegPath || 'no disponible');
 
 // Configurar ruta básica para mantener vivo el servicio
 app.get('/', (req, res) => {
@@ -557,18 +579,31 @@ const audioQueue = {
                 channelId: channel.id,
                 guildId: channel.guild.id,
                 adapterCreator: channel.guild.voiceAdapterCreator,
+                selfDeaf: false,
             });
 
             // Manejamos la desconexión manual
-            this.currentConnection.on('stateChange', (oldState, newState) => {
-                if (newState.status === 'destroyed' || newState.status === 'disconnected') {
-                    console.log(`Conexión ${newState.status}`);
-                    this.cleanup(false); // No intentamos destruir la conexión de nuevo
+            this.currentConnection.on('stateChange', async (oldState, newState) => {
+                if (newState.status === VoiceConnectionStatus.Disconnected) {
+                    console.log('Conexión desconectada, intentando reconectar...');
+                    try {
+                        await Promise.race([
+                            entersState(this.currentConnection, VoiceConnectionStatus.Signalling, 5000),
+                            entersState(this.currentConnection, VoiceConnectionStatus.Connecting, 5000),
+                        ]);
+                    } catch (error) {
+                        console.log('No se pudo reconectar la voz, limpiando conexión');
+                        this.cleanup(true);
+                    }
+                } else if (newState.status === VoiceConnectionStatus.Destroyed) {
+                    console.log('Conexión destruida');
                 }
             });
 
+            await entersState(this.currentConnection, VoiceConnectionStatus.Ready, 15000);
+
             this.currentPlayer = createAudioPlayer();
-            const filePath = path.join(__dirname, audioFile);
+            const filePath = resolveAudioFile(audioFile);
             
             console.log(`Intentando reproducir: ${filePath}`);
             
@@ -577,11 +612,12 @@ const audioQueue = {
             }
 
             // Usar ffmpeg con salida en Ogg/Opus
-            const ffmpeg = spawn(ffmpegPath, [
+            const ffmpeg = spawn(ffmpegBin, [
                 '-hide_banner',
                 '-loglevel', 'warning',
                 '-nostdin',
                 '-i', filePath,
+                '-vn',
                 '-f', 'ogg',
                 '-c:a', 'libopus',
                 '-b:a', '128k',
@@ -589,15 +625,6 @@ const audioQueue = {
                 'pipe:1'
             ], {
                 stdio: ['ignore', 'pipe', 'pipe']
-            });
-
-            let isProcessing = false;
-
-            ffmpeg.stdout.on('data', (data) => {
-                if (!isProcessing) {
-                    console.log(`📊 Ogg/Opus stream iniciado (${data.length} bytes)`);
-                    isProcessing = true;
-                }
             });
 
             ffmpeg.stderr.on('data', (data) => {
@@ -611,12 +638,18 @@ const audioQueue = {
                 console.error(`❌ Error del proceso ffmpeg:`, error.message);
             });
 
+            ffmpeg.on('close', (code, signal) => {
+                if (code !== 0) {
+                    console.error(`FFmpeg terminó con código ${code}${signal ? ` (${signal})` : ''}`);
+                }
+            });
+
             const resource = createAudioResource(ffmpeg.stdout, {
                 inputType: StreamType.OggOpus,
             });
             
-            this.currentPlayer.play(resource);
             this.currentConnection.subscribe(this.currentPlayer);
+            this.currentPlayer.play(resource);
             
             console.log(`Audio iniciando: ${audioFile}`);
 
