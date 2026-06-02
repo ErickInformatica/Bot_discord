@@ -1,11 +1,17 @@
 const { Client, GatewayIntentBits, EmbedBuilder, VoiceChannel, MessageEmbed, Collection, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes, SlashCommandBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType } = require('@discordjs/voice');
+const fs = require('fs');
 const path = require('path');
 const config = require('./auth.json');
+const ffmpegPath = require('ffmpeg-static');
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const https = require('https');
+
+if (ffmpegPath) {
+    process.env.FFMPEG_PATH = ffmpegPath;
+}
 
 // Configurar ruta básica para mantener vivo el servicio
 app.get('/', (req, res) => {
@@ -558,7 +564,13 @@ const audioQueue = {
             });
 
             this.currentPlayer = createAudioPlayer();
-            const resource = createAudioResource(path.join(__dirname, audioFile));
+            const filePath = path.join(__dirname, audioFile);
+            if (!fs.existsSync(filePath)) {
+                throw new Error(`Archivo de audio no encontrado: ${filePath}`);
+            }
+            const resource = createAudioResource(fs.createReadStream(filePath), {
+                inputType: StreamType.Arbitrary,
+            });
             
             this.currentPlayer.play(resource);
             this.currentConnection.subscribe(this.currentPlayer);
