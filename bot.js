@@ -576,6 +576,9 @@ const audioQueue = {
 
             // Usar ffmpeg spawned para mayor compatibilidad
             const ffmpeg = spawn(ffmpegPath, [
+                '-hide_banner',
+                '-loglevel', 'warning',
+                '-nostdin',
                 '-i', filePath,
                 '-f', 's16le',
                 '-ar', '48000',
@@ -585,8 +588,21 @@ const audioQueue = {
                 stdio: ['ignore', 'pipe', 'pipe']
             });
 
+            let isProcessing = false;
+
+            ffmpeg.stdout.on('data', (data) => {
+                if (!isProcessing) {
+                    console.log(`📊 Datos recibidos de ffmpeg (${data.length} bytes)`);
+                    isProcessing = true;
+                }
+            });
+
             ffmpeg.stderr.on('data', (data) => {
                 console.log(`[FFmpeg] ${data.toString().trim()}`);
+            });
+
+            ffmpeg.on('error', (error) => {
+                console.error(`❌ Error del proceso ffmpeg:`, error.message);
             });
 
             const resource = createAudioResource(ffmpeg.stdout, {
