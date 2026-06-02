@@ -564,6 +564,7 @@ const audioQueue = {
             }
 
             const channel = interaction.member.voice.channel;
+            console.log(`Canal de voz detectado: ${channel.name} (${channel.id}) en guild ${channel.guild.id}`);
             
             // Verificamos si ya existe una conexión y la limpiamos
             if (this.currentConnection) {
@@ -584,6 +585,8 @@ const audioQueue = {
 
             // Manejamos la desconexión manual
             this.currentConnection.on('stateChange', async (oldState, newState) => {
+                console.log(`Estado voz: ${oldState.status} -> ${newState.status}`);
+
                 if (newState.status === VoiceConnectionStatus.Disconnected) {
                     console.log('Conexión desconectada, intentando reconectar...');
                     try {
@@ -600,7 +603,9 @@ const audioQueue = {
                 }
             });
 
-            await entersState(this.currentConnection, VoiceConnectionStatus.Ready, 15000);
+            console.log('Esperando conexión de voz Ready...');
+            await entersState(this.currentConnection, VoiceConnectionStatus.Ready, 30000);
+            console.log('Conexión de voz lista.');
 
             this.currentPlayer = createAudioPlayer();
             const filePath = resolveAudioFile(audioFile);
