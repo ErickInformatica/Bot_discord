@@ -41,10 +41,12 @@ const URL_REGEX = /^https?:\/\//i;
 const SPOTIFY_REGEX = /^(https?:\/\/open\.spotify\.com\/|spotify:)/i;
 const MUSIC_TIMEOUT_MS = 20 * 60 * 1000;
 const YTDLP_FORMAT = 'ba[ext=webm]/ba/bestaudio/best';
+const USE_DIRECT_AUDIO_STREAM = process.env.YTDLP_DIRECT_STREAM === 'true';
 
 console.log('FFmpeg bin:', ffmpegBin);
 console.log('yt-dlp bin:', ytdlpBin);
 console.log('yt-dlp cookies:', ytdlpCookiesPath ? ytdlpCookiesPath : 'no configuradas');
+console.log('yt-dlp direct stream:', USE_DIRECT_AUDIO_STREAM ? 'activado' : 'desactivado');
 console.log('FFmpeg static path:', ffmpegPath || 'no disponible');
 
 const getYtdlpSharedArgs = () => [
@@ -847,12 +849,15 @@ const audioQueue = {
 
             if (music) {
                 console.log(`Intentando reproducir música: ${music.input}`);
-                if (music.streamUrl) {
+                if (USE_DIRECT_AUDIO_STREAM && music.streamUrl) {
                     console.log('Usando URL directa de audio resuelta por yt-dlp.');
                     ffmpeg = spawn(ffmpegBin, [
                         '-hide_banner',
                         '-loglevel', 'warning',
                         '-nostdin',
+                        '-reconnect', '1',
+                        '-reconnect_streamed', '1',
+                        '-reconnect_delay_max', '5',
                         ...buildFfmpegHeaderArgs(music.httpHeaders),
                         '-i', music.streamUrl,
                         '-vn',
