@@ -147,6 +147,102 @@ const getYtdlpInfo = async (source) => {
     return info;
 };
 
+const getDirectAudioUrl = (info) => {
+    if (info.url) {
+        return info.url;
+    }
+
+    if (Array.isArray(info.requested_formats)) {
+        const audioFormat = info.requested_formats.find(format => format.vcodec === 'none' && format.url);
+        return audioFormat ? audioFormat.url : null;
+    }
+
+    if (Array.isArray(info.formats)) {
+        const audioFormat = info.formats.find(format => format.vcodec === 'none' && format.url);
+        return audioFormat ? audioFormat.url : null;
+    }
+
+    return null;
+};
+
+const buildFfmpegHeaderArgs = (headers = {}) => {
+    const headerText = Object.entries(headers)
+        .filter(([, value]) => value)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\r\n');
+
+    return headerText ? ['-headers', `${headerText}\r\n`] : [];
+};
+
+const musicFromInfo = (input, info, requestedQuery) => ({
+    input,
+    streamUrl: getDirectAudioUrl(info),
+    httpHeaders: info.http_headers || {},
+    title: info.title || requestedQuery,
+    duration: info.duration || null,
+    thumbnail: info.thumbnail || null,
+    url: info.webpage_url || input,
+    requestedQuery,
+});
+
+const formatDuration = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+        return 'Desconocida';
+    }
+
+    const roundedSeconds = Math.round(seconds);
+    const minutes = Math.floor(roundedSeconds / 60);
+    const remainingSeconds = roundedSeconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const getRequester = (interaction) => interaction.author || interaction.user;
+
+const createNowPlayingEmbed = (item, isPaused = false) => {
+    const requester = item.requester;
+    const music = item.music;
+    const embed = new EmbedBuilder()
+        .setTitle(isPaused ? 'Now Playing - Pausado' : 'Now Playing')
+        .setColor(isPaused ? 'Yellow' : 'Blurple')
+        .setDescription(`[${music.title}](${music.url || music.input})`)
+        .addFields(
+            { name: 'Duración', value: formatDuration(music.duration), inline: true },
+            { name: 'Pedido por', value: requester ? `<@${requester.id}>` : 'Desconocido', inline: true },
+            { name: 'En cola', value: `${audioQueue.queue.filter(queueItem => queueItem.music).length}`, inline: true }
+        );
+
+    if (music.thumbnail) {
+        embed.setThumbnail(music.thumbnail);
+    }
+
+    return embed;
+};
+
+const createNowPlayingComponents = (isPaused = false, disabled = false) => [
+    new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('music:pause_resume')
+            .setLabel(isPaused ? 'Resume' : 'Pause')
+            .setStyle(isPaused ? ButtonStyle.Success : ButtonStyle.Secondary)
+            .setDisabled(disabled),
+        new ButtonBuilder()
+            .setCustomId('music:skip')
+            .setLabel('Skip')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(disabled),
+        new ButtonBuilder()
+            .setCustomId('music:playlist')
+            .setLabel('Ver playlist')
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(disabled),
+        new ButtonBuilder()
+            .setCustomId('music:end')
+            .setLabel('End Session')
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(disabled)
+    )
+];
+
 const resolveMusicSource = async (query) => {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
@@ -157,31 +253,16 @@ const resolveMusicSource = async (query) => {
         const search = await getSpotifySearchText(trimmedQuery);
         const info = await getYtdlpInfo(`ytsearch1:${search}`);
 
-        return {
-            input: info.webpage_url || info.url || `ytsearch1:${search}`,
-            title: info.title || search,
-            url: info.webpage_url,
-            requestedQuery: trimmedQuery,
-        };
+        return musicFromInfo(info.webpage_url || `ytsearch1:${search}`, info, trimmedQuery);
     }
 
     if (URL_REGEX.test(trimmedQuery)) {
         const info = await getYtdlpInfo(trimmedQuery);
-        return {
-            input: info.webpage_url || trimmedQuery,
-            title: info.title || trimmedQuery,
-            url: info.webpage_url || trimmedQuery,
-            requestedQuery: trimmedQuery,
-        };
+        return musicFromInfo(info.webpage_url || trimmedQuery, info, trimmedQuery);
     }
 
     const info = await getYtdlpInfo(`ytsearch1:${trimmedQuery}`);
-    return {
-        input: info.webpage_url || info.url || `ytsearch1:${trimmedQuery}`,
-        title: info.title || trimmedQuery,
-        url: info.webpage_url,
-        requestedQuery: trimmedQuery,
-    };
+    return musicFromInfo(info.webpage_url || `ytsearch1:${trimmedQuery}`, info, trimmedQuery);
 };
 
 // Configurar ruta básica para mantener vivo el servicio
@@ -692,6 +773,9 @@ const audioQueue = {
     currentPlayer: null,
     currentProcesses: [],
     currentTimer: null,
+    currentItem: null,
+    nowPlayingMessage: null,
+    isPaused: false,
 
     async processQueue() {
         if (this.isPlaying || this.queue.length === 0) {
@@ -703,6 +787,8 @@ const audioQueue = {
         const queueItem = this.queue.shift();
         const { interaction, audioFile, music } = queueItem;
         const itemName = music ? music.title : audioFile;
+        this.currentItem = queueItem;
+        this.isPaused = false;
         console.log(`Procesando audio: ${itemName}`);
         
         try {
@@ -761,64 +847,83 @@ const audioQueue = {
 
             if (music) {
                 console.log(`Intentando reproducir música: ${music.input}`);
-                const ytdlp = spawn(ytdlpBin, [
-                    ...getYtdlpSharedArgs(),
-                    '--no-playlist',
-                    '-f', YTDLP_FORMAT,
-                    '-o', '-',
-                    music.input
-                ], {
-                    stdio: ['ignore', 'pipe', 'pipe']
-                });
+                if (music.streamUrl) {
+                    console.log('Usando URL directa de audio resuelta por yt-dlp.');
+                    ffmpeg = spawn(ffmpegBin, [
+                        '-hide_banner',
+                        '-loglevel', 'warning',
+                        '-nostdin',
+                        ...buildFfmpegHeaderArgs(music.httpHeaders),
+                        '-i', music.streamUrl,
+                        '-vn',
+                        '-f', 'ogg',
+                        '-c:a', 'libopus',
+                        '-b:a', '128k',
+                        '-ar', '48000',
+                        'pipe:1'
+                    ], {
+                        stdio: ['ignore', 'pipe', 'pipe']
+                    });
+                } else {
+                    const ytdlp = spawn(ytdlpBin, [
+                        ...getYtdlpSharedArgs(),
+                        '--no-playlist',
+                        '-f', YTDLP_FORMAT,
+                        '-o', '-',
+                        music.input
+                    ], {
+                        stdio: ['ignore', 'pipe', 'pipe']
+                    });
 
-                this.currentProcesses.push(ytdlp);
+                    this.currentProcesses.push(ytdlp);
 
-                ytdlp.stderr.on('data', (data) => {
-                    const msg = data.toString().trim();
-                    if (msg) {
-                        console.log(`[yt-dlp] ${msg}`);
-                    }
-                });
+                    ytdlp.stderr.on('data', (data) => {
+                        const msg = data.toString().trim();
+                        if (msg) {
+                            console.log(`[yt-dlp] ${msg}`);
+                        }
+                    });
 
-                ytdlp.stdout.on('error', (error) => {
-                    if (error.code !== 'EPIPE') {
-                        console.error('Error en stdout de yt-dlp:', error.message);
-                    }
-                });
+                    ytdlp.stdout.on('error', (error) => {
+                        if (error.code !== 'EPIPE') {
+                            console.error('Error en stdout de yt-dlp:', error.message);
+                        }
+                    });
 
-                ytdlp.on('error', (error) => {
-                    console.error('Error del proceso yt-dlp:', error.message);
-                });
+                    ytdlp.on('error', (error) => {
+                        console.error('Error del proceso yt-dlp:', error.message);
+                    });
 
-                ytdlp.on('close', (code, signal) => {
-                    this.currentProcesses = this.currentProcesses.filter(process => process !== ytdlp);
-                    if (code !== 0 && code !== null) {
-                        console.error(`yt-dlp terminó con código ${code}${signal ? ` (${signal})` : ''}`);
-                    }
-                });
+                    ytdlp.on('close', (code, signal) => {
+                        this.currentProcesses = this.currentProcesses.filter(process => process !== ytdlp);
+                        if (code !== 0 && code !== null) {
+                            console.error(`yt-dlp terminó con código ${code}${signal ? ` (${signal})` : ''}`);
+                        }
+                    });
 
-                ffmpeg = spawn(ffmpegBin, [
-                    '-hide_banner',
-                    '-loglevel', 'warning',
-                    '-nostdin',
-                    '-i', 'pipe:0',
-                    '-vn',
-                    '-f', 'ogg',
-                    '-c:a', 'libopus',
-                    '-b:a', '128k',
-                    '-ar', '48000',
-                    'pipe:1'
-                ], {
-                    stdio: ['pipe', 'pipe', 'pipe']
-                });
+                    ffmpeg = spawn(ffmpegBin, [
+                        '-hide_banner',
+                        '-loglevel', 'warning',
+                        '-nostdin',
+                        '-i', 'pipe:0',
+                        '-vn',
+                        '-f', 'ogg',
+                        '-c:a', 'libopus',
+                        '-b:a', '128k',
+                        '-ar', '48000',
+                        'pipe:1'
+                    ], {
+                        stdio: ['pipe', 'pipe', 'pipe']
+                    });
 
-                ffmpeg.stdin.on('error', (error) => {
-                    if (error.code !== 'EPIPE') {
-                        console.error('Error en stdin de ffmpeg:', error.message);
-                    }
-                });
+                    ffmpeg.stdin.on('error', (error) => {
+                        if (error.code !== 'EPIPE') {
+                            console.error('Error en stdin de ffmpeg:', error.message);
+                        }
+                    });
 
-                ytdlp.stdout.pipe(ffmpeg.stdin);
+                    ytdlp.stdout.pipe(ffmpeg.stdin);
+                }
             } else {
                 const filePath = resolveAudioFile(audioFile);
                 
@@ -871,6 +976,9 @@ const audioQueue = {
             
             this.currentConnection.subscribe(this.currentPlayer);
             this.currentPlayer.play(resource);
+            if (music) {
+                await this.sendNowPlaying(interaction);
+            }
             
             console.log(`Audio iniciando: ${itemName}`);
 
@@ -929,6 +1037,16 @@ const audioQueue = {
                 }
             });
             this.currentProcesses = [];
+            if (this.nowPlayingMessage && this.currentItem?.music) {
+                this.nowPlayingMessage.edit({
+                    components: createNowPlayingComponents(this.isPaused, true)
+                }).catch(error => {
+                    console.error('No pude deshabilitar controles de Now Playing:', error.message);
+                });
+            }
+            this.nowPlayingMessage = null;
+            this.currentItem = null;
+            this.isPaused = false;
 
             if (this.currentConnection && destroyConnection) {
                 try {
@@ -957,7 +1075,13 @@ const audioQueue = {
 
     addMusicToQueue(interaction, music) {
         console.log(`Agregando música a la cola: ${music.title}`);
-        this.queue.push({ interaction, music, timeoutMs: MUSIC_TIMEOUT_MS });
+        this.queue.push({
+            interaction,
+            music,
+            requester: getRequester(interaction),
+            timeoutMs: MUSIC_TIMEOUT_MS
+        });
+        this.updateNowPlaying();
         this.processQueue().catch(error => {
             console.error('Error en processQueue:', error);
             this.cleanup();
@@ -967,6 +1091,92 @@ const audioQueue = {
     stopAll() {
         this.queue = [];
         this.cleanup(true);
+    },
+
+    async sendNowPlaying(interaction) {
+        if (!this.currentItem || !this.currentItem.music) {
+            return;
+        }
+
+        const payload = {
+            embeds: [createNowPlayingEmbed(this.currentItem, this.isPaused)],
+            components: createNowPlayingComponents(this.isPaused)
+        };
+
+        try {
+            if (interaction.channel && interaction.channel.send) {
+                this.nowPlayingMessage = await interaction.channel.send(payload);
+            }
+        } catch (error) {
+            console.error('No pude enviar Now Playing:', error.message);
+        }
+    },
+
+    async updateNowPlaying() {
+        if (!this.nowPlayingMessage || !this.currentItem || !this.currentItem.music) {
+            return;
+        }
+
+        try {
+            await this.nowPlayingMessage.edit({
+                embeds: [createNowPlayingEmbed(this.currentItem, this.isPaused)],
+                components: createNowPlayingComponents(this.isPaused)
+            });
+        } catch (error) {
+            console.error('No pude actualizar Now Playing:', error.message);
+        }
+    },
+
+    async pauseOrResume() {
+        if (!this.currentPlayer || !this.currentItem?.music) {
+            return 'No hay música reproduciéndose.';
+        }
+
+        if (this.isPaused) {
+            this.currentPlayer.unpause();
+            this.isPaused = false;
+            await this.updateNowPlaying();
+            return 'Reproducción reanudada.';
+        }
+
+        this.currentPlayer.pause();
+        this.isPaused = true;
+        await this.updateNowPlaying();
+        return 'Reproducción pausada.';
+    },
+
+    skipCurrent() {
+        if (!this.currentPlayer) {
+            return 'No hay música reproduciéndose.';
+        }
+
+        this.currentPlayer.stop(true);
+        return 'Saltando canción.';
+    },
+
+    getPlaylistText() {
+        const lines = [];
+
+        if (this.currentItem?.music) {
+            lines.push(`Sonando: ${this.currentItem.music.title} (${formatDuration(this.currentItem.music.duration)})`);
+        }
+
+        const musicQueue = this.queue.filter(queueItem => queueItem.music);
+        if (musicQueue.length === 0) {
+            lines.push('La cola está vacía.');
+            return lines.join('\n');
+        }
+
+        musicQueue.slice(0, 10).forEach((queueItem, index) => {
+            const requester = queueItem.requester ? ` - <@${queueItem.requester.id}>` : '';
+            lines.push(`${index + 1}. ${queueItem.music.title} (${formatDuration(queueItem.music.duration)})${requester}`);
+        });
+
+        if (musicQueue.length > 10) {
+            lines.push(`...y ${musicQueue.length - 10} más.`);
+        }
+
+        return lines.join('\n');
     }
 };
 
@@ -1186,6 +1396,31 @@ https.get('https://discord.com/api/v10', (res) => {
 
 // Manejar los comandos slash
 client.on('interactionCreate', async interaction => {
+    if (interaction.isButton()) {
+        if (!interaction.customId.startsWith('music:')) {
+            return;
+        }
+
+        if (interaction.customId === 'music:pause_resume') {
+            const message = await audioQueue.pauseOrResume();
+            return interaction.reply({ content: message, ephemeral: true });
+        }
+
+        if (interaction.customId === 'music:skip') {
+            const message = audioQueue.skipCurrent();
+            return interaction.reply({ content: message, ephemeral: true });
+        }
+
+        if (interaction.customId === 'music:end') {
+            audioQueue.stopAll();
+            return interaction.reply({ content: 'Sesión terminada y cola vaciada.', ephemeral: true });
+        }
+
+        if (interaction.customId === 'music:playlist') {
+            return interaction.reply({ content: audioQueue.getPlaylistText(), ephemeral: true });
+        }
+    }
+
     if (!interaction.isCommand()) return;
 
     const commandName = interaction.commandName;
