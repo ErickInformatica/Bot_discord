@@ -35,9 +35,106 @@ const resolveAudioFile = (audioFile) => {
 };
 
 const ffmpegBin = process.env.FFMPEG_PATH || 'ffmpeg';
+const ytdlpBin = process.env.YTDLP_PATH || 'yt-dlp';
+const URL_REGEX = /^https?:\/\//i;
+const SPOTIFY_REGEX = /^(https?:\/\/open\.spotify\.com\/|spotify:)/i;
+const MUSIC_TIMEOUT_MS = 20 * 60 * 1000;
 
 console.log('FFmpeg bin:', ffmpegBin);
+console.log('yt-dlp bin:', ytdlpBin);
 console.log('FFmpeg static path:', ffmpegPath || 'no disponible');
+
+const runBufferedCommand = (command, args, timeoutMs = 20000) => new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+        stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    let stdout = '';
+    let stderr = '';
+    const timeout = setTimeout(() => {
+        child.kill('SIGKILL');
+        reject(new Error(`${command} tardó demasiado en responder`));
+    }, timeoutMs);
+
+    child.stdout.on('data', data => {
+        stdout += data.toString();
+    });
+
+    child.stderr.on('data', data => {
+        stderr += data.toString();
+    });
+
+    child.on('error', error => {
+        clearTimeout(timeout);
+        reject(error);
+    });
+
+    child.on('close', code => {
+        clearTimeout(timeout);
+        if (code === 0) {
+            resolve(stdout);
+        } else {
+            reject(new Error(stderr.trim() || `${command} terminó con código ${code}`));
+        }
+    });
+});
+
+const getYtdlpInfo = async (source) => {
+    const output = await runBufferedCommand(ytdlpBin, [
+        '--dump-single-json',
+        '--no-playlist',
+        '--skip-download',
+        source
+    ]);
+
+    const info = JSON.parse(output);
+    if (Array.isArray(info.entries) && info.entries.length > 0) {
+        return info.entries[0];
+    }
+
+    return info;
+};
+
+const resolveMusicSource = async (query) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+        throw new Error('No recibí canción, link o búsqueda.');
+    }
+
+    if (SPOTIFY_REGEX.test(trimmedQuery)) {
+        const spotifyInfo = await getYtdlpInfo(trimmedQuery);
+        const artists = Array.isArray(spotifyInfo.artists)
+            ? spotifyInfo.artists.join(' ')
+            : spotifyInfo.artists;
+        const artist = spotifyInfo.artist || artists || spotifyInfo.uploader || '';
+        const title = spotifyInfo.track || spotifyInfo.title || trimmedQuery;
+        const search = [artist, title].filter(Boolean).join(' ');
+
+        return {
+            input: `ytsearch1:${search}`,
+            title,
+            requestedQuery: trimmedQuery,
+        };
+    }
+
+    if (URL_REGEX.test(trimmedQuery)) {
+        const info = await getYtdlpInfo(trimmedQuery);
+        return {
+            input: trimmedQuery,
+            title: info.title || trimmedQuery,
+            url: info.webpage_url || trimmedQuery,
+            requestedQuery: trimmedQuery,
+        };
+    }
+
+    const info = await getYtdlpInfo(`ytsearch1:${trimmedQuery}`);
+    return {
+        input: `ytsearch1:${trimmedQuery}`,
+        title: info.title || trimmedQuery,
+        url: info.webpage_url,
+        requestedQuery: trimmedQuery,
+    };
+};
 
 // Configurar ruta básica para mantener vivo el servicio
 app.get('/', (req, res) => {
@@ -545,6 +642,7 @@ const audioQueue = {
     queue: [],
     currentConnection: null,
     currentPlayer: null,
+    currentProcesses: [],
 
     async processQueue() {
         if (this.isPlaying || this.queue.length === 0) {
@@ -553,8 +651,10 @@ const audioQueue = {
         }
         
         this.isPlaying = true;
-        const { interaction, audioFile } = this.queue.shift();
-        console.log(`Procesando audio: ${audioFile}`);
+        const queueItem = this.queue.shift();
+        const { interaction, audioFile, music } = queueItem;
+        const itemName = music ? music.title : audioFile;
+        console.log(`Procesando audio: ${itemName}`);
         
         try {
             if (!interaction.member.voice.channel) {
@@ -608,29 +708,82 @@ const audioQueue = {
             console.log('Conexión de voz lista.');
 
             this.currentPlayer = createAudioPlayer();
-            const filePath = resolveAudioFile(audioFile);
-            
-            console.log(`Intentando reproducir: ${filePath}`);
-            
-            if (!fs.existsSync(filePath)) {
-                throw new Error(`Archivo de audio no encontrado: ${filePath}`);
+            let ffmpeg;
+
+            if (music) {
+                console.log(`Intentando reproducir música: ${music.input}`);
+                const ytdlp = spawn(ytdlpBin, [
+                    '--no-playlist',
+                    '-f', 'bestaudio/best',
+                    '-o', '-',
+                    music.input
+                ], {
+                    stdio: ['ignore', 'pipe', 'pipe']
+                });
+
+                this.currentProcesses.push(ytdlp);
+
+                ytdlp.stderr.on('data', (data) => {
+                    const msg = data.toString().trim();
+                    if (msg) {
+                        console.log(`[yt-dlp] ${msg}`);
+                    }
+                });
+
+                ytdlp.on('error', (error) => {
+                    console.error('Error del proceso yt-dlp:', error.message);
+                });
+
+                ytdlp.on('close', (code, signal) => {
+                    this.currentProcesses = this.currentProcesses.filter(process => process !== ytdlp);
+                    if (code !== 0 && code !== null) {
+                        console.error(`yt-dlp terminó con código ${code}${signal ? ` (${signal})` : ''}`);
+                    }
+                });
+
+                ffmpeg = spawn(ffmpegBin, [
+                    '-hide_banner',
+                    '-loglevel', 'warning',
+                    '-nostdin',
+                    '-i', 'pipe:0',
+                    '-vn',
+                    '-f', 'ogg',
+                    '-c:a', 'libopus',
+                    '-b:a', '128k',
+                    '-ar', '48000',
+                    'pipe:1'
+                ], {
+                    stdio: ['pipe', 'pipe', 'pipe']
+                });
+
+                ytdlp.stdout.pipe(ffmpeg.stdin);
+            } else {
+                const filePath = resolveAudioFile(audioFile);
+                
+                console.log(`Intentando reproducir: ${filePath}`);
+                
+                if (!fs.existsSync(filePath)) {
+                    throw new Error(`Archivo de audio no encontrado: ${filePath}`);
+                }
+
+                // Usar ffmpeg con salida en Ogg/Opus
+                ffmpeg = spawn(ffmpegBin, [
+                    '-hide_banner',
+                    '-loglevel', 'warning',
+                    '-nostdin',
+                    '-i', filePath,
+                    '-vn',
+                    '-f', 'ogg',
+                    '-c:a', 'libopus',
+                    '-b:a', '128k',
+                    '-ar', '48000',
+                    'pipe:1'
+                ], {
+                    stdio: ['ignore', 'pipe', 'pipe']
+                });
             }
 
-            // Usar ffmpeg con salida en Ogg/Opus
-            const ffmpeg = spawn(ffmpegBin, [
-                '-hide_banner',
-                '-loglevel', 'warning',
-                '-nostdin',
-                '-i', filePath,
-                '-vn',
-                '-f', 'ogg',
-                '-c:a', 'libopus',
-                '-b:a', '128k',
-                '-ar', '48000',
-                'pipe:1'
-            ], {
-                stdio: ['ignore', 'pipe', 'pipe']
-            });
+            this.currentProcesses.push(ffmpeg);
 
             ffmpeg.stderr.on('data', (data) => {
                 const msg = data.toString().trim();
@@ -644,6 +797,7 @@ const audioQueue = {
             });
 
             ffmpeg.on('close', (code, signal) => {
+                this.currentProcesses = this.currentProcesses.filter(process => process !== ffmpeg);
                 if (code !== 0) {
                     console.error(`FFmpeg terminó con código ${code}${signal ? ` (${signal})` : ''}`);
                 }
@@ -656,32 +810,32 @@ const audioQueue = {
             this.currentConnection.subscribe(this.currentPlayer);
             this.currentPlayer.play(resource);
             
-            console.log(`Audio iniciando: ${audioFile}`);
+            console.log(`Audio iniciando: ${itemName}`);
 
             return new Promise((resolve) => {
                 this.currentPlayer.on(AudioPlayerStatus.Idle, () => {
-                    console.log(`✓ Audio terminado: ${audioFile}`);
+                    console.log(`✓ Audio terminado: ${itemName}`);
                     this.cleanup(true);
                     resolve();
                 });
 
                 this.currentPlayer.on('error', error => {
-                    console.error(`✗ Error reproduciendo ${audioFile}:`, error.message);
+                    console.error(`✗ Error reproduciendo ${itemName}:`, error.message);
                     this.cleanup(true);
                     resolve();
                 });
 
                 this.currentPlayer.on(AudioPlayerStatus.Playing, () => {
-                    console.log(`▶ Reproduciendo: ${audioFile}`);
+                    console.log(`▶ Reproduciendo: ${itemName}`);
                 });
 
                 setTimeout(() => {
                     if (this.isPlaying) {
-                        console.log(`⏱ Timeout de seguridad activado para: ${audioFile}`);
+                        console.log(`⏱ Timeout de seguridad activado para: ${itemName}`);
                         this.cleanup(true);
                         resolve();
                     }
-                }, 30000);
+                }, queueItem.timeoutMs || 30000);
             });
         } catch (error) {
             console.error('Error procesando cola de audio:', error);
@@ -699,6 +853,15 @@ const audioQueue = {
                 }
                 this.currentPlayer = null;
             }
+
+            this.currentProcesses.forEach(process => {
+                try {
+                    process.kill('SIGKILL');
+                } catch (error) {
+                    console.log('Error al detener proceso de audio:', error);
+                }
+            });
+            this.currentProcesses = [];
 
             if (this.currentConnection && destroyConnection) {
                 try {
@@ -723,6 +886,20 @@ const audioQueue = {
             console.error('Error en processQueue:', error);
             this.cleanup();
         });
+    },
+
+    addMusicToQueue(interaction, music) {
+        console.log(`Agregando música a la cola: ${music.title}`);
+        this.queue.push({ interaction, music, timeoutMs: MUSIC_TIMEOUT_MS });
+        this.processQueue().catch(error => {
+            console.error('Error en processQueue:', error);
+            this.cleanup();
+        });
+    },
+
+    stopAll() {
+        this.queue = [];
+        this.cleanup(true);
     }
 };
 
@@ -738,6 +915,31 @@ const playAudio = async (interaction, audioFile) => {
     } catch (error) {
         console.error('Error en playAudio:', error);
         return false;
+    }
+};
+
+const playMusic = async (interaction, query) => {
+    try {
+        if (!interaction.member.voice.channel) {
+            return {
+                ok: false,
+                message: 'Necesitas estar en un canal de voz para reproducir música.'
+            };
+        }
+
+        const music = await resolveMusicSource(query);
+        audioQueue.addMusicToQueue(interaction, music);
+
+        return {
+            ok: true,
+            message: `Agregada a la cola: ${music.title}`
+        };
+    } catch (error) {
+        console.error('Error en playMusic:', error);
+        return {
+            ok: false,
+            message: `No pude preparar esa música: ${error.message}`
+        };
     }
 };
 
@@ -763,6 +965,22 @@ Object.entries(commandConfig).forEach(([commandName, config]) => {
         }
     };
 });
+
+commands.play = async (message, args) => {
+    const query = args.join(' ').trim();
+    if (!query) {
+        return message.reply('Usa `&play <link de YouTube/Spotify o nombre de canción>`.');
+    }
+
+    const loadingMessage = await message.reply('Buscando música...');
+    const result = await playMusic(message, query);
+    return loadingMessage.edit(result.message);
+};
+
+commands.stop = async (message) => {
+    audioQueue.stopAll();
+    return message.reply('Reproducción detenida y cola vaciada.');
+};
 
 const COOLDOWN_DURATION = 5000;
 client.on('messageCreate', async message => {
@@ -836,6 +1054,25 @@ Object.entries(commandConfig).forEach(([commandName, config]) => {
     }
 });
 
+slashCommands.push(
+    new SlashCommandBuilder()
+        .setName('play')
+        .setDescription('Reproduce música desde YouTube, Spotify o una búsqueda')
+        .addStringOption(option =>
+            option.setName('busqueda')
+                .setDescription('Link de YouTube/Spotify o nombre de canción')
+                .setRequired(true)
+        )
+        .toJSON()
+);
+
+slashCommands.push(
+    new SlashCommandBuilder()
+        .setName('stop')
+        .setDescription('Detiene la reproducción y vacía la cola')
+        .toJSON()
+);
+
 // Registrar los comandos slash
 const rest = new REST({ version: '10' }).setToken(config.Token);
 
@@ -872,6 +1109,18 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
 
     const commandName = interaction.commandName;
+
+    if (commandName === 'play') {
+        const query = interaction.options.getString('busqueda');
+        await interaction.deferReply();
+        const result = await playMusic(interaction, query);
+        return interaction.editReply(result.message);
+    }
+
+    if (commandName === 'stop') {
+        audioQueue.stopAll();
+        return interaction.reply('Reproducción detenida y cola vaciada.');
+    }
     
     // Buscar el comando principal si es un alias
     let mainCommand = commandName;
