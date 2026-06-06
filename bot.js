@@ -36,13 +36,59 @@ const resolveAudioFile = (audioFile) => {
 
 const ffmpegBin = process.env.FFMPEG_PATH || 'ffmpeg';
 const ytdlpBin = process.env.YTDLP_PATH || 'yt-dlp';
+const ytdlpCookiesPath = process.env.YTDLP_COOKIES;
 const URL_REGEX = /^https?:\/\//i;
 const SPOTIFY_REGEX = /^(https?:\/\/open\.spotify\.com\/|spotify:)/i;
 const MUSIC_TIMEOUT_MS = 20 * 60 * 1000;
 
 console.log('FFmpeg bin:', ffmpegBin);
 console.log('yt-dlp bin:', ytdlpBin);
+console.log('yt-dlp cookies:', ytdlpCookiesPath ? ytdlpCookiesPath : 'no configuradas');
 console.log('FFmpeg static path:', ffmpegPath || 'no disponible');
+
+const getYtdlpSharedArgs = () => ytdlpCookiesPath ? ['--cookies', ytdlpCookiesPath] : [];
+
+const toSpotifyUrl = (value) => {
+    if (!value.startsWith('spotify:')) {
+        return value;
+    }
+
+    const [, type, id] = value.split(':');
+    return type && id ? `https://open.spotify.com/${type}/${id}` : value;
+};
+
+const fetchJson = (url) => new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+        let body = '';
+
+        res.on('data', chunk => {
+            body += chunk;
+        });
+
+        res.on('end', () => {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                reject(new Error(`HTTP ${res.statusCode} al consultar ${url}`));
+                return;
+            }
+
+            try {
+                resolve(JSON.parse(body));
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }).on('error', reject);
+});
+
+const getSpotifySearchText = async (spotifyInput) => {
+    const spotifyUrl = toSpotifyUrl(spotifyInput);
+    const data = await fetchJson(`https://open.spotify.com/oembed?url=${encodeURIComponent(spotifyUrl)}`);
+    if (!data.title) {
+        throw new Error('No pude leer el título de Spotify.');
+    }
+
+    return data.title.replace(/\s*\|\s*Spotify\s*$/i, '').trim();
+};
 
 const runBufferedCommand = (command, args, timeoutMs = 20000) => new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -81,6 +127,7 @@ const runBufferedCommand = (command, args, timeoutMs = 20000) => new Promise((re
 
 const getYtdlpInfo = async (source) => {
     const output = await runBufferedCommand(ytdlpBin, [
+        ...getYtdlpSharedArgs(),
         '--dump-single-json',
         '--no-playlist',
         '--skip-download',
@@ -102,17 +149,11 @@ const resolveMusicSource = async (query) => {
     }
 
     if (SPOTIFY_REGEX.test(trimmedQuery)) {
-        const spotifyInfo = await getYtdlpInfo(trimmedQuery);
-        const artists = Array.isArray(spotifyInfo.artists)
-            ? spotifyInfo.artists.join(' ')
-            : spotifyInfo.artists;
-        const artist = spotifyInfo.artist || artists || spotifyInfo.uploader || '';
-        const title = spotifyInfo.track || spotifyInfo.title || trimmedQuery;
-        const search = [artist, title].filter(Boolean).join(' ');
+        const search = await getSpotifySearchText(trimmedQuery);
 
         return {
             input: `ytsearch1:${search}`,
-            title,
+            title: search,
             requestedQuery: trimmedQuery,
         };
     }
@@ -713,6 +754,7 @@ const audioQueue = {
             if (music) {
                 console.log(`Intentando reproducir música: ${music.input}`);
                 const ytdlp = spawn(ytdlpBin, [
+                    ...getYtdlpSharedArgs(),
                     '--no-playlist',
                     '-f', 'bestaudio/best',
                     '-o', '-',
@@ -1075,6 +1117,7 @@ slashCommands.push(
 
 // Registrar los comandos slash
 const rest = new REST({ version: '10' }).setToken(config.Token);
+const guildId = process.env.GUILD_ID || config.GuildId;
 
 https.get('https://discord.com/api/v10', (res) => {
     console.log('Status code Discord API:', res.statusCode);
@@ -1092,10 +1135,22 @@ https.get('https://discord.com/api/v10', (res) => {
         console.log('Intentando registrar comandos slash...');
         console.log('Comenzando a registrar los comandos slash...');
 
-        await rest.put(
-            Routes.applicationCommands(config.ClientId),
-            { body: slashCommands, signal: controller.signal },
-        );
+        console.log(`Registrando ${slashCommands.length} comandos: ${slashCommands.map(command => command.name).join(', ')}`);
+
+        if (guildId) {
+            console.log(`Registrando comandos slash en guild: ${guildId}`);
+            await rest.put(
+                Routes.applicationGuildCommands(config.ClientId, guildId),
+                { body: slashCommands, signal: controller.signal },
+            );
+        } else {
+            console.log('Registrando comandos slash globales');
+            await rest.put(
+                Routes.applicationCommands(config.ClientId),
+                { body: slashCommands, signal: controller.signal },
+            );
+        }
+
         clearTimeout(timeout);
         console.log('¡Comandos slash registrados exitosamente!');
     } catch (error) {
