@@ -40,13 +40,17 @@ const ytdlpCookiesPath = process.env.YTDLP_COOKIES;
 const URL_REGEX = /^https?:\/\//i;
 const SPOTIFY_REGEX = /^(https?:\/\/open\.spotify\.com\/|spotify:)/i;
 const MUSIC_TIMEOUT_MS = 20 * 60 * 1000;
+const YTDLP_FORMAT = 'ba[ext=webm]/ba/bestaudio/best';
 
 console.log('FFmpeg bin:', ffmpegBin);
 console.log('yt-dlp bin:', ytdlpBin);
 console.log('yt-dlp cookies:', ytdlpCookiesPath ? ytdlpCookiesPath : 'no configuradas');
 console.log('FFmpeg static path:', ffmpegPath || 'no disponible');
 
-const getYtdlpSharedArgs = () => ytdlpCookiesPath ? ['--cookies', ytdlpCookiesPath] : [];
+const getYtdlpSharedArgs = () => [
+    ...(ytdlpCookiesPath ? ['--cookies', ytdlpCookiesPath] : []),
+    '--no-progress',
+];
 
 const toSpotifyUrl = (value) => {
     if (!value.startsWith('spotify:')) {
@@ -131,6 +135,7 @@ const getYtdlpInfo = async (source) => {
         '--dump-single-json',
         '--no-playlist',
         '--skip-download',
+        '-f', YTDLP_FORMAT,
         source
     ]);
 
@@ -150,10 +155,12 @@ const resolveMusicSource = async (query) => {
 
     if (SPOTIFY_REGEX.test(trimmedQuery)) {
         const search = await getSpotifySearchText(trimmedQuery);
+        const info = await getYtdlpInfo(`ytsearch1:${search}`);
 
         return {
-            input: `ytsearch1:${search}`,
-            title: search,
+            input: info.webpage_url || info.url || `ytsearch1:${search}`,
+            title: info.title || search,
+            url: info.webpage_url,
             requestedQuery: trimmedQuery,
         };
     }
@@ -161,7 +168,7 @@ const resolveMusicSource = async (query) => {
     if (URL_REGEX.test(trimmedQuery)) {
         const info = await getYtdlpInfo(trimmedQuery);
         return {
-            input: trimmedQuery,
+            input: info.webpage_url || trimmedQuery,
             title: info.title || trimmedQuery,
             url: info.webpage_url || trimmedQuery,
             requestedQuery: trimmedQuery,
@@ -170,7 +177,7 @@ const resolveMusicSource = async (query) => {
 
     const info = await getYtdlpInfo(`ytsearch1:${trimmedQuery}`);
     return {
-        input: `ytsearch1:${trimmedQuery}`,
+        input: info.webpage_url || info.url || `ytsearch1:${trimmedQuery}`,
         title: info.title || trimmedQuery,
         url: info.webpage_url,
         requestedQuery: trimmedQuery,
@@ -684,6 +691,7 @@ const audioQueue = {
     currentConnection: null,
     currentPlayer: null,
     currentProcesses: [],
+    currentTimer: null,
 
     async processQueue() {
         if (this.isPlaying || this.queue.length === 0) {
@@ -756,7 +764,7 @@ const audioQueue = {
                 const ytdlp = spawn(ytdlpBin, [
                     ...getYtdlpSharedArgs(),
                     '--no-playlist',
-                    '-f', 'bestaudio/best',
+                    '-f', YTDLP_FORMAT,
                     '-o', '-',
                     music.input
                 ], {
@@ -769,6 +777,12 @@ const audioQueue = {
                     const msg = data.toString().trim();
                     if (msg) {
                         console.log(`[yt-dlp] ${msg}`);
+                    }
+                });
+
+                ytdlp.stdout.on('error', (error) => {
+                    if (error.code !== 'EPIPE') {
+                        console.error('Error en stdout de yt-dlp:', error.message);
                     }
                 });
 
@@ -796,6 +810,12 @@ const audioQueue = {
                     'pipe:1'
                 ], {
                     stdio: ['pipe', 'pipe', 'pipe']
+                });
+
+                ffmpeg.stdin.on('error', (error) => {
+                    if (error.code !== 'EPIPE') {
+                        console.error('Error en stdin de ffmpeg:', error.message);
+                    }
                 });
 
                 ytdlp.stdout.pipe(ffmpeg.stdin);
@@ -871,7 +891,7 @@ const audioQueue = {
                     console.log(`▶ Reproduciendo: ${itemName}`);
                 });
 
-                setTimeout(() => {
+                this.currentTimer = setTimeout(() => {
                     if (this.isPlaying) {
                         console.log(`⏱ Timeout de seguridad activado para: ${itemName}`);
                         this.cleanup(true);
@@ -887,6 +907,11 @@ const audioQueue = {
 
     cleanup(destroyConnection = true) {
         try {
+            if (this.currentTimer) {
+                clearTimeout(this.currentTimer);
+                this.currentTimer = null;
+            }
+
             if (this.currentPlayer) {
                 try {
                     this.currentPlayer.stop();
